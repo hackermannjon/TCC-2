@@ -1,6 +1,6 @@
 # src/interface/app.py
 from __future__ import annotations
-import sys
+import sys, glob
 from pathlib import Path
 import pandas as pd
 import numpy as np
@@ -14,25 +14,26 @@ if str(ROOT) not in sys.path:
 from src.models.preference_model import PreferenceModel
 from src.recommender.core import rank_candidates
 
-DATA_DIR   = ROOT / "data"
-IMG_DIR    = DATA_DIR / "raw" / "images" / "ProfilesDataSet"
-FEAT_PATH  = DATA_DIR / "processed" / "multimodal_features.npy"
-CSV_PATH   = DATA_DIR / "processed" / "selected_profiles.csv"
-LOG_PATH   = DATA_DIR / "logs" / "interactions.csv"
-TOP_K      = 20
-EXP_BASE   = 0.3
+DATA_DIR = ROOT / "data"
+IMG_DIR  = DATA_DIR / "raw" / "images" / "ProfilesDataSet"
+FEAT_PATH = DATA_DIR / "processed" / "multimodal_features.npy"
+CSV_PATH  = DATA_DIR / "processed" / "selected_profiles.csv"
+LOG_PATH  = DATA_DIR / "logs" / "interactions.csv"
+TOP_K   = 20
+EXP_BASE = 0.3
 
 @st.cache_resource
-def load_embeddings():
+def load_embeddings() -> np.ndarray:
     return np.load(FEAT_PATH)
 
 @st.cache_resource
-def load_profiles():
+def load_profiles() -> pd.DataFrame:
     return pd.read_csv(CSV_PATH)
 
 X  = load_embeddings()
 df = load_profiles()
 
+# ------------- session init -----------------
 if "model" not in st.session_state:
     st.session_state.model = PreferenceModel(n_features=X.shape[1])
 if "pool" not in st.session_state:
@@ -43,8 +44,7 @@ if "likes" not in st.session_state:
     st.session_state.likes = 0
     st.session_state.dislikes = 0
 
-# ------------------------------------------------------------
-
+# ------------- util -------------------------
 def log_interaction(idx: int, like: bool):
     LOG_PATH.parent.mkdir(parents=True, exist_ok=True)
     pd.DataFrame([
@@ -56,15 +56,14 @@ def pick_next():
     if not st.session_state.pool:
         st.success("🎉 Fim dos perfis!")
         st.stop()
-
     n_fb = st.session_state.likes + st.session_state.dislikes
     explore = EXP_BASE / (1 + 0.002 * n_fb)
 
     pool_idx = np.array(st.session_state.pool[: TOP_K * 2])
     if st.session_state.model._trained:
         feats = X[pool_idx]
-        idx, _ = rank_candidates(st.session_state.model, feats, 1, explore)
-        chosen = int(pool_idx[idx[0]])
+        idx_top, _ = rank_candidates(st.session_state.model, feats, 1, explore)
+        chosen = int(pool_idx[idx_top[0]])
     else:
         chosen = int(pool_idx[0])
     st.session_state.pool.remove(chosen)
@@ -76,7 +75,7 @@ def reset_session():
         del st.session_state[k]
     st.rerun()
 
-# ---------------- Sidebar ------------------------
+# ------------- sidebar ----------------------
 st.sidebar.title("MatchPredict‑AI")
 if st.sidebar.button("🔄 Reiniciar Sessão"):
     reset_session()
@@ -87,44 +86,62 @@ progress = (st.session_state.likes + st.session_state.dislikes) / len(X)
 st.sidebar.progress(progress, text=f"{len(X)-len(st.session_state.pool)} / {len(X)} vistos")
 
 if st.session_state.model._trained:
-    p_like = st.session_state.model.predict(X[st.session_state.current: st.session_state.current+1])[0]
-    st.sidebar.metric("Prob. de Like", f"{p_like:.3f}")
+    prob = st.session_state.model.predict(X[st.session_state.current: st.session_state.current+1])[0]
+    st.sidebar.metric("Prob. de Like", f"{prob:.3f}")
 else:
-    st.sidebar.info("Dê pelo menos 1 Like e 1 Dislike para ativar o modelo.")
+    st.sidebar.info("Dê ao menos 1 Like e 1 Dislike para ativar o modelo.")
 
-# ---------------- Perfil Atual -------------------
+# ------------- perfil atual ------------------
 row = df.iloc[st.session_state.current]
-img_path = IMG_DIR / f"{st.session_state.current}.jpg"
+idx = st.session_state.current
+
+# determina sexo -> busca imagem cujo sufixo é M ou F
+sex_val = str(row.get("sex", "m")).strip().lower()[:1]  # 'm' ou 'f'
+file_candidates = []
+if sex_val == "m":
+    for race in ("C", "A"):
+        file_candidates.append(IMG_DIR / f"{race}M{idx}.jpg")
+else:
+    for race in ("C", "A"):
+        file_candidates.append(IMG_DIR / f"{race}F{idx}.jpg")
+
+for p in file_candidates:
+    if p.exists():
+        img_path = p
+        break
+else:
+    img_path = None
 
 col_img, col_txt = st.columns([1,2])
 with col_img:
-    if img_path.exists():
+    if img_path:
         st.image(Image.open(img_path), width=260)
     else:
-        st.image(Image.new("RGB", (260,260), "gray"))
+        st.image(Image.new("RGB", (260,260), "gray"), caption="Imagem não disponível")
 
 with col_txt:
-    sexo       = row.get("sex", "?")
-    orient     = row.get("orientation", "?")
-    idade      = int(row.get("age", -1)) if not pd.isna(row.get("age")) else "?"
-    location   = row.get("location", "N/D") if "location" in row else "N/D"
-    st.subheader(f"{sexo.capitalize()} – {orient}")
+    sexo = row.get("sex", "?").capitalize()
+    orient = row.get("orientation", "?")
+    idade = int(row["age"]) if not pd.isna(row.get("age")) else "?"
+    location = row.get("location", "N/D") if "location" in row else "N/D"
+
+    st.subheader(f"{sexo} – {orient}")
     st.write(f"**Idade:** {idade}  |  **Local:** {location}")
-    st.write(row.get("essay0", "(bio não disponível)"))
+    st.write(row.get("essay0", "(bio não disponível.)"))
 
 like_col, dislike_col = st.columns(2)
 with like_col:
     if st.button("👍 Like", use_container_width=True):
-        st.session_state.model.update(X[st.session_state.current], like=True)
+        st.session_state.model.update(X[idx], like=True)
         st.session_state.likes += 1
-        log_interaction(st.session_state.current, True)
+        log_interaction(idx, True)
         pick_next()
         st.rerun()
 
 with dislike_col:
     if st.button("👎 Dislike", use_container_width=True):
-        st.session_state.model.update(X[st.session_state.current], like=False)
+        st.session_state.model.update(X[idx], like=False)
         st.session_state.dislikes += 1
-        log_interaction(st.session_state.current, False)
+        log_interaction(idx, False)
         pick_next()
         st.rerun()
