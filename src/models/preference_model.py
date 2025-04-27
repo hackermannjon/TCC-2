@@ -1,13 +1,12 @@
 # src/models/preference_model.py
 """
-PreferenceModel — Logistic Regression com histórico completo
-• Armazena todo feedback (likes/dislikes)
-• Escala features via StandardScaler
-• Retreina LogisticRegression liblinear sempre que existem
-  pelo menos 1 exemplo de cada classe
-"""
+PreferenceModel — Logistic Regression com retreinamento completo
 
-from __future__ import annotations
+• Armazena histórico completo de interações (X, y)
+• Aplica StandardScaler
+• Usa LogisticRegression regularizado (C=0.01)
+• Retreina o modelo a cada novo feedback
+"""
 from pathlib import Path
 import joblib
 import numpy as np
@@ -20,40 +19,38 @@ class PreferenceModel:
         self.scaler = StandardScaler()
         self.clf = LogisticRegression(
             solver="liblinear",
-            random_state=random_state,
+            C=0.01,
+            class_weight="balanced",
             max_iter=1000,
+            random_state=random_state
         )
         self.X_hist: list[np.ndarray] = []
         self.y_hist: list[int] = []
         self._trained = False
 
-    # ---------- treinamento interno ----------
-    def _fit(self) -> None:
-        """Treina/re-treina se há pelo menos 1 exemplo de cada classe."""
+    def _fit(self):
+        # só treina quando há exemplos de ambas classes
         if len(set(self.y_hist)) < 2:
-            # ainda não temos as duas classes → adia o ajuste
             return
         X = np.vstack(self.X_hist)
         y = np.array(self.y_hist)
-        X_scaled = self.scaler.fit_transform(X)
-        self.clf.fit(X_scaled, y)
+        Xs = self.scaler.fit_transform(X)
+        self.clf.fit(Xs, y)
         self._trained = True
 
-    # ---------- API pública ----------
     def update(self, x: np.ndarray, like: bool) -> None:
-        """Armazena o feedback e re-treina quando possível."""
+        """Adiciona novo feedback e retreina o modelo."""
         self.X_hist.append(x.reshape(1, -1))
         self.y_hist.append(1 if like else 0)
         self._fit()
 
     def predict(self, X: np.ndarray) -> np.ndarray:
-        """Probabilidade de like para cada vetor em X."""
+        """Retorna probabilidade de like para cada vetor em X."""
         if not self._trained:
-            raise RuntimeError("Modelo ainda não possui exemplos das duas classes.")
-        X_scaled = self.scaler.transform(X)
-        return self.clf.predict_proba(X_scaled)[:, 1]
+            raise RuntimeError("Modelo não treinado com duas classes.")
+        Xs = self.scaler.transform(X)
+        return self.clf.predict_proba(Xs)[:, 1]
 
-    # ---------- persistência ----------
     def save(self, path: str | Path) -> None:
         joblib.dump(self, path)
 
