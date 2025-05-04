@@ -11,3 +11,4 @@
  requests
  kaggle
  joblib
+ node2vec
