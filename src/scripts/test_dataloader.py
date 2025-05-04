@@ -1,16 +1,23 @@
+# src/scripts/test_dataloader.py
+
 import sys
+import logging
 from pathlib import Path
-# Adiciona raiz do projeto ao sys.path para permitir imports absolutos
+from tqdm import tqdm
+
+# Entra na raiz do projeto para imports absolutos e paths corretos
 ROOT = Path(__file__).resolve().parents[2]
 if str(ROOT) not in sys.path:
     sys.path.append(str(ROOT))
 
-import logging
 from src.models.datasets import GraphRecDataset
-from tqdm import tqdm
+
+# Paths absolutos
+FEATURES_PATH      = ROOT / "data" / "processed" / "combined_features.npy"
+INTERACTIONS_PATH  = ROOT / "data" / "logs" / "interactions.csv"
+LOG_FILE           = ROOT / "data" / "logs" / "test_dataloader.log"
 
 # Configura logger para arquivo
-LOG_FILE = Path("data/logs/test_dataloader.log")
 LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
 logging.basicConfig(
     filename=str(LOG_FILE),
@@ -20,12 +27,14 @@ logging.basicConfig(
 
 def main():
     logging.info("=== Iniciando teste do GraphRecDataset ===")
+
     # Carrega dataset
     ds = GraphRecDataset(
-        features_path=Path("data/processed/combined_features.npy"),
-        interactions_path=Path("data/logs/interactions.csv"),
+        features_path=FEATURES_PATH,
+        interactions_path=INTERACTIONS_PATH,
         k_social=10
     )
+
     total = len(ds)
     logging.info(f"Total de interações no dataset: {total}")
     print(f"Total de interações: {total}")
@@ -42,7 +51,8 @@ def main():
     # Iterar sobre todo o dataset com barra de progresso
     logging.info("Iterando sobre todas as amostras com tqdm...")
     for _ in tqdm(range(total), desc="Carregando amostras", unit="amostra"):
-        pass
+        _ = ds[_]  # acessa cada amostra
+
     logging.info("Teste do dataset concluído com sucesso.")
     print("\nTeste concluído. Verifique o log em:", LOG_FILE)
 

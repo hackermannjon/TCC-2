@@ -1,0 +1,10 @@
+2025-05-04 17:26:34,537 INFO === Iniciando teste do GraphRecDataset ===
+2025-05-04 17:26:34,696 INFO Total de interações no dataset: 236
+2025-05-04 17:26:34,697 INFO Exibindo 5 primeiras amostras...
+2025-05-04 17:26:34,750 INFO Amostra 0: {'item_idx': tensor(0), 'rating': tensor(1.), 'neigh_idxs': tensor([1839,    3,  728, 1709,  633, 1561, 1348, 1568,  308,  677])}
+2025-05-04 17:26:34,753 INFO Amostra 1: {'item_idx': tensor(0), 'rating': tensor(0.), 'neigh_idxs': tensor([1839,    3,  728, 1709,  633, 1561, 1348, 1568,  308,  677])}
+2025-05-04 17:26:34,753 INFO Amostra 2: {'item_idx': tensor(0), 'rating': tensor(1.), 'neigh_idxs': tensor([1839,    3,  728, 1709,  633, 1561, 1348, 1568,  308,  677])}
+2025-05-04 17:26:34,755 INFO Amostra 3: {'item_idx': tensor(1), 'rating': tensor(0.), 'neigh_idxs': tensor([ 659,  725, 1944,  682,  692, 1015,  661, 1376, 1945, 1162])}
+2025-05-04 17:26:34,756 INFO Amostra 4: {'item_idx': tensor(23), 'rating': tensor(0.), 'neigh_idxs': tensor([ 27, 523, 150, 101, 606, 212, 302, 281, 630, 384])}
+2025-05-04 17:26:34,757 INFO Iterando sobre todas as amostras com tqdm...
+2025-05-04 17:26:34,763 INFO Teste do dataset concluído com sucesso.
