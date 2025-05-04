@@ -1,16 +1,26 @@
-# src/scripts/test_preference.py
-import numpy as np
 from pathlib import Path
+import numpy as np
+from tqdm import tqdm
 from src.models.preference_model import PreferenceModel
 
-X = np.load(Path("data/processed/multimodal_features.npy"))
-model = PreferenceModel(n_features=X.shape[1])
+X = np.load(Path("data/processed/combined_features.npy"))
 
-# 100 likes + 100 dislikes
-for i in range(100):
-    model.update(X[i], like=True)
-for i in range(100, 200):
-    model.update(X[i], like=False)
+model = PreferenceModel(
+    feats_path=Path("data/processed/combined_features.npy"),
+    logs_path=Path("data/logs/interactions.csv"),
+    ckpt_path=Path("data/models/graphrec.pth")
+)
 
-print("Likes simulados   :", model.predict(X[:5]).round(3))
-print("Dislikes simulados:", model.predict(X[100:105]).round(3))
+for i in tqdm(range(100), desc="likes"):
+    model.update(i, like=True)
+for i in tqdm(range(100, 200), desc="dislikes"):
+    model.update(i, like=False)
+
+print("▶ treino offline …")
+model.train(epochs=5, batch_size=32, lr=3e-4)
+
+likes_probs    = model.predict(X[:5])
+dislikes_probs = model.predict(X[100:105])
+
+print("\nProb. primeiros 5 (likes)   :", np.round(likes_probs, 3))
+print("Prob. next 5 (dislikes)     :", np.round(dislikes_probs, 3))

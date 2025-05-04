@@ -1,38 +1,28 @@
-# src/scripts/test_ranking.py
-import numpy as np
 from pathlib import Path
+import numpy as np
 from tqdm import tqdm
 from src.models.preference_model import PreferenceModel
-from src.recommender.core import rank_candidates
 
-ORIGINAL = True  # ou False para a versão otimizada
+X = np.load(Path("data/processed/combined_features.npy"))
 
-# Carrega features
-X = np.load(Path("data/processed/multimodal_features.npy"))
-model = PreferenceModel(n_features=X.shape[1])
+model = PreferenceModel(
+    feats_path=Path("data/processed/combined_features.npy"),
+    logs_path=Path("data/logs/interactions.csv"),
+    ckpt_path=Path("data/models/graphrec.pth")
+)
 
-n_like = 1000
-n_dis  = 1000
-n_total = min(len(X), n_like + n_dis)
+for i in tqdm(range(100), desc="likes"):
+    model.update(i, like=True)
+for i in tqdm(range(100, 200), desc="dislikes"):
+    model.update(i, like=False)
 
-if ORIGINAL:
-    print("▶ Versão ORIGINAL: update() + fit() a cada exemplo")
-    for i in tqdm(range(n_like), desc="Likes", unit="ex"):
-        model.update(X[i], like=True)
-    for i in tqdm(range(n_like, n_total), desc="Dislikes", unit="ex"):
-        model.update(X[i], like=False)
-else:
-    print("▶ Versão OTIMIZADA: acumula histórico e fit() único")
-    for i in tqdm(range(n_like), desc="Likes", unit="ex"):
-        model.X_hist.append(X[i].reshape(1, -1)); model.y_hist.append(1)
-    for i in tqdm(range(n_like, n_total), desc="Dislikes", unit="ex"):
-        model.X_hist.append(X[i].reshape(1, -1)); model.y_hist.append(0)
-    print("▶ Treinando modelo uma única vez…")
-    model._fit()
+print("▶ treino offline …")
+model.train(epochs=5, batch_size=32, lr=3e-4)
 
-print("▶ Executando ranking…")
-candidates = X[n_total:]
-idx_top, probs_top = rank_candidates(model, candidates, top_k=5, explore_frac=0.2)
+candidates = X[200:]
+probs = [model.predict(np.array([v]))[0] for v in tqdm(candidates, desc="ranking")]
+probs = np.array(probs)
 
-print("\nTop-5 índices (rel. aos candidatos):", idx_top)
-print("Probabilidades                     :", probs_top.round(3))
+top5 = np.argsort(-probs)[:5]
+print("\nTop‑5 idx (candidates) :", top5)
+print("Probabilidades         :", np.round(probs[top5], 3))
