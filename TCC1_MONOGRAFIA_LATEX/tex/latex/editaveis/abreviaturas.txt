@@ -1,0 +1,20 @@
+\begin{siglas}
+  \item[API] \textit{Application Programming Interface}
+  \item[BaaS] \textit{Backend as a Service}
+  \item[BSON] \textit{Binary Serialized Object Notation}
+  \item[CD] \textit{Continuous Delivery}
+  \item[CI] \textit{Continuous Integration}
+  \item[CPU] \textit{Central Processing Unit}
+  \item[DDD] \textit{Domain-Driven Design}
+  \item[GRASP] \textit{General Responsibility Assignment Software Pattern}
+  \item[JSON] \textit{JavaScript Object Notation}
+  \item[NoSQL] \textit{Not Only Structured Query Language}
+  \item[POC] \textit{Proof of Concept}
+  \item[SDK] \textit{Software Development Kit}
+  \item[SQL] \textit{Structured Query Language}
+  \item[TDD] \textit{Test Driven Development}
+  \item[UI] \textit{User Interface}
+  \item[URL] \textit{Uniform Resource Locator}
+  \item[UX] \textit{User Experience}
+  \item[VM] \textit{Virtual Machine}
+\end{siglas}

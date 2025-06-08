@@ -1,0 +1,16 @@
+\begin{resumo}[Abstract]
+ \begin{otherlanguage*}{english}
+
+The evolutionary maintenance of software is a crucial process to keep it 
+aligned with the stakeholders' needs and market demands. This is particularly 
+challenging in the context of mobile development due to the rapid and constant 
+evolution of the scenario, making the process highly dynamic. The choice of design and the selection of programming techniques for software implementation are of great importance. Applications with tight deadlines often prioritize agility in implementation, sometimes neglecting the good development practices defined by the Software Engineering community. In this context, there is room for implementing many improvements in the produced softwares.
+This work aims to conduct an exploratory study, focused on proof of concepts, promoting the reengineering of an existing software application. It utilizes an approach that combines Test Driven Development and Domain-Driven Design. Reengineering the application requires reverse engineering to understand its functionalities and qualitative peculiarities. The application serves a specific target audience, and despite the inherent difficulty in evolving it, it is believed that this difficulty arises from the development being carried out without adherence to Software Engineering best practices. During the application's development, due to its charitable nature, there was a need to meet a short deadline, preventing a more thorough and best practices-oriented process. The development was basic, involving brief elicitation of requirements and an intense development phase.
+This work applies a test-driven approach to address potential issues before the application's new deployment. It involves a cyclical process comprising: (i) writing a unit test that initially fails since the code has not been implemented yet; (ii) creating code that satisfies this test, immediately passing the written test; (iii) refactoring the code to improve specific aspects, such as readability; and (iv) finally, executing the test again. Additionally, using domain-driven design, the goal is to achieve greater semantic value in the new application development proposal. Focusing on the business domain, understanding ideas, knowledge, and business processes tends to allow greater immersion of those involved. Consequently, this may indicate greater coherence with the real needs of users and, therefore, greater success when the solution is made available for use. Such improvements are desired in the specific application under consideration.
+
+   \vspace{\onelineskip}
+ 
+   \noindent 
+   \textbf{Key-words}: Reengineering. Reverse Engineering. Mobile Applications. Test Driven Development. Domain-Driven Design.
+ \end{otherlanguage*}
+\end{resumo}

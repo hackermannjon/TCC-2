@@ -1,0 +1,21 @@
+% Dados pessoais
+\autor{Mateus Gomes do Nascimento e Vinícius de Sousa Saturnino}
+\curso{Engenharia de Software}
+
+% Dados do trabalho
+\titulo{Reengenharia do Aplicativo Mia Ajuda: Uma Abordagem Orientada a TDD e DDD}
+\data{2023}
+\palavraChaveUm{Test-Driven Development (TDD)}
+\palavraChaveDois{Domain-Driven Design (DDD)}
+
+% Dados da orientacao
+\orientador{Prof. Dr. Maurício Serrano}
+\coorientador[Coorientadora:]{Profª. Drª. Milene Serrano}
+
+% Dados para a ficha catalográfica
+\cdu{02:141:005.6}
+
+% Dados da aprovação do trabalho
+\dataDaAprovacao{21 de Dezembro de 2023}
+\membroConvidadoUm{Profª. Drª. Elaine Venson}
+\membroConvidadoDois{M.Sc Rafael Fazzolino P. Barbosa}
