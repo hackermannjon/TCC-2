@@ -3,20 +3,21 @@
 import sys
 import subprocess
 import locale
-
-# Força UTF-8 para o stdout
-if sys.stdout.encoding != 'utf-8':
-    sys.stdout.reconfigure(encoding='utf-8')
-
-# Configura locale para UTF-8
-locale.setlocale(locale.LC_ALL, '.UTF-8')
 import os
-import sys
 import time
 from pathlib import Path
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+
+# Força UTF-8 para o stdout e o ambiente, conforme solicitado
+try:
+    if sys.stdout.encoding != 'utf-8':
+        sys.stdout.reconfigure(encoding='utf-8')
+    locale.setlocale(locale.LC_ALL, 'en_US.UTF-8') # Usar 'en_US.UTF-8' ou 'C.UTF-8' para compatibilidade
+except locale.Error:
+    print("[AVISO] Nao foi possivel definir o locale para UTF-8. Continuando com a configuracao padrao.")
+
 
 # ==============================================================================
 # FUNÇÕES AUXILIARES DE EXECUÇÃO E RELATÓRIO
@@ -24,16 +25,19 @@ from tqdm import tqdm
 
 def run_command(cmd_list: list[str], cwd: Path):
     """
-    Executa um comando no shell e retorna True se sucesso, False caso contrário.
-    A saída do processo é capturada e pode ser impressa depois.
+    Executa um comando no shell, força o ambiente para UTF-8,
+    e retorna True se sucesso, False caso contrário.
     """
+    cmd_str = ' '.join(cmd_list)
+    print(f"\n>>> Executando: {cmd_str}")
+    start_time = time.time()
+    
     try:
         # Configura o ambiente para usar UTF-8
         env = os.environ.copy()
         env["PYTHONIOENCODING"] = "utf-8"
         
-        # Usamos sys.executable para garantir o uso do mesmo ambiente Python
-        # e -m para executar módulos de forma segura
+        # Executa o processo
         process = subprocess.run([sys.executable, "-m", *cmd_list],
                                  cwd=cwd, capture_output=True, text=True, 
                                  check=True, encoding='utf-8', env=env)
@@ -49,9 +53,9 @@ def print_npy_info(path: Path, root_dir: Path):
     """
     try:
         arr = np.load(path)
-        print(f"  - {path.relative_to(root_dir)} → shape: {arr.shape}")
+        print(f"  - {path.relative_to(root_dir)} -> shape: {arr.shape}")
     except Exception as e:
-        print(f"  - {path.relative_to(root_dir)} → erro ao carregar: {e}")
+        print(f"  - {path.relative_to(root_dir)} -> erro ao carregar: {e}")
 
 def print_csv_info(path: Path, root_dir: Path, n_rows=3):
     """
@@ -65,7 +69,7 @@ def print_csv_info(path: Path, root_dir: Path, n_rows=3):
         print("  Primeiras linhas:")
         print(df.head(n_rows).to_string())
     except Exception as e:
-        print(f"  - {path.relative_to(root_dir)} → erro ao ler: {e}")
+        print(f"  - {path.relative_to(root_dir)} -> erro ao ler: {e}")
 
 
 # ==============================================================================
@@ -97,17 +101,21 @@ def main():
     print("[OK] Pré-requisitos verificados com sucesso.")
 
     # --- Definição das Etapas do Pipeline ---
+    # MODIFICADO: Atualizado para incluir a criação de personas e a avaliação comparativa.
     steps = [
         # Etapa 1: Processamento de Dados
-        {"title": "1/7: Gerando Features Multimodais", "module": "src.models.features"},
-        {"title": "2/7: Gerando Embeddings Sociais", "module": "src.models.social_graph"},
-        {"title": "3/7: Combinando Features Finais", "module": "src.models.combine_features"},
-        # Etapa 2: Treinamento
-        {"title": "4/7: Treinando Modelo GraphRec", "module": "src.models.train_graphrec"},
-        # Etapa 3: Avaliação e Testes
-        {"title": "5/7: Avaliando Modelo no Teste", "module": "src.scripts.evaluate_graphrec"},
-        {"title": "6/7: Testando Preferências", "module": "src.scripts.test_preference"},
-        {"title": "7/7: Testando Ranking", "module": "src.scripts.test_ranking"},
+        {"title": "1/8: Gerando Features Multimodais", "module": "src.models.features"},
+        {"title": "2/8: Gerando Embeddings Sociais", "module": "src.models.social_graph"},
+        {"title": "3/8: Combinando Features Finais", "module": "src.models.combine_features"},
+        # Etapa 2: Geração de Personas
+        {"title": "4/8: Criando Personas de Usuario", "module": "src.scripts.create_personas"},
+        # Etapa 3: Treinamento
+        {"title": "5/8: Treinando Modelo GraphRec", "module": "src.models.train_graphrec"},
+        # Etapa 4: Avaliação Comparativa
+        {"title": "6/8: Avaliando (Baseline vs Personas)", "module": "src.scripts.evaluate_comparison"},
+        # Etapa 5: Testes de Sanidade
+        {"title": "7/8: Testando Preferencias", "module": "src.scripts.test_preference"},
+        {"title": "8/8: Testando Ranking", "module": "src.scripts.test_ranking"},
     ]
 
     print("\n\n=== INICIANDO EXECUÇÃO DAS ETAPAS DO PIPELINE ===")
@@ -120,25 +128,25 @@ def main():
             success, stdout, stderr = run_command([step['module']], cwd=ROOT)
             duration = time.time() - start_time
             
-            # Imprime o output do subprocesso
+            # Adiciona uma borda para separar visualmente a saída de cada etapa
+            print("-" * 60)
             if stdout.strip():
-                print("\n---- STDOUT ----")
                 print(stdout.strip())
             if stderr.strip():
-                print("\n---- STDERR (Warnings) ----")
+                print("\n[STDERR - Warnings ou Infos Adicionais]:")
                 print(stderr.strip())
+            print("-" * 60)
             
-            if not success:                
-                print(f"\n[ERRO] ERRO na etapa '{step['title']}' (duração: {duration:.2f}s)")
+            if not success:
+                print(f"\n[ERRO] Falha na etapa '{step['title']}' (duração: {duration:.2f}s)")
                 print("[ABORTADO] Pipeline abortado.")
-                # Se o erro foi no subprocesso, o stderr já foi impresso na função run_command
                 return
             
             print(f"[OK] Etapa '{step['title']}' concluída com sucesso! (duração: {duration:.2f}s)\n")
             pbar.update(1)
 
-    # --- 4. Relatório Final de Artefatos Gerados ---
-    print("\n\n=== ETAPA 4: Relatório Final de Artefatos Gerados ===")
+    # --- ETAPA FINAL: Relatório de Artefatos Gerados ---
+    print("\n\n=== ETAPA FINAL: Relatório de Artefatos Gerados ===")
     
     processed_dir = ROOT / "data/processed"
     models_dir = ROOT / "data/models"
@@ -147,7 +155,6 @@ def main():
     print("\n--- Conteúdo dos diretórios de saída ---")
     for dir_path in [processed_dir, models_dir, logs_dir]:
         print(f"[DIR] {dir_path.relative_to(ROOT)}:")
-        # Lista arquivos de forma não recursiva para um relatório mais limpo
         contents = sorted([p.name for p in dir_path.glob('*') if p.is_file()])
         if contents:
             for item in contents:
@@ -156,6 +163,7 @@ def main():
             print("  (vazio ou apenas subdiretórios)")
 
     print("\n\n--- Detalhes dos artefatos ---")
+    
     print("\n[INFO] Arquivos .npy em data/processed:")
     for npy_file in processed_dir.glob("*.npy"):
         print_npy_info(npy_file, ROOT)
