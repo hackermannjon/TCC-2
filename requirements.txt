@@ -1,14 +1,16 @@
- pandas
- numpy
- tqdm
- sentence-transformers
- torch
- torchvision
- torchaudio
- streamlit
- scikit-learn
- pillow
- requests
- kaggle
- joblib
- node2vec
+pandas
+numpy
+tqdm
+sentence-transformers
+torch
+torchvision
+torchaudio
+streamlit
+scikit-learn
+pillow
+requests
+kaggle
+joblib
+node2vec
+matplotlib
+seaborn
