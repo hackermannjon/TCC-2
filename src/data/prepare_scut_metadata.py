@@ -19,7 +19,7 @@ def main():
     out = Path("data/processed")
     out.mkdir(exist_ok=True)
     df.to_csv(out / "profiles_metadata.csv", index=False)
-    print(f"✅ Metadados SCUT salvos em {out/'profiles_metadata.csv'}")
+    print(f"[OK] Metadados SCUT salvos em {out/'profiles_metadata.csv'}")
 
 if __name__ == "__main__":
     main()

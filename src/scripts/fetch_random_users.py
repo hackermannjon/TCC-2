@@ -55,7 +55,7 @@ def save_metadata(profiles, path):
     path.parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         json.dump(profiles, f, ensure_ascii=False, indent=2)
-    print(f"✅ Metadados salvos em {path} (total: {len(profiles)} perfis)")
+    print(f"[OK] Metadados salvos em {path} (total: {len(profiles)} perfis)")
 
 def download_images(profiles, img_dir):
     img_dir.mkdir(parents=True, exist_ok=True)
@@ -73,7 +73,7 @@ def download_images(profiles, img_dir):
         else:
             print(f"⚠️ Falha ao baixar {url}")
     total = len(list(img_dir.iterdir()))
-    print(f"✅ Avatares salvos em {img_dir} (total: {total})")
+    print(f"[OK] Avatares salvos em {img_dir} (total: {total})")
 
 def main():
     print(f"▶ Iniciando fetch de {TOTAL_PROFILES} perfis em batches de {BATCH_SIZE}...")

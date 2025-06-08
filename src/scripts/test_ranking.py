@@ -20,7 +20,7 @@ for i in tqdm(range(100), desc="likes", unit="it"):
 for i in tqdm(range(100, 200), desc="dislikes", unit="it"):
     model.update(i, like=False)
 
-print("▶ treino offline …")
+print("[INFO] treino offline ...")
 model.train(epochs=5, batch_size=32, lr=3e-4)
 
 # agora ranking em batch único

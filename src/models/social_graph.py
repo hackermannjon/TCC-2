@@ -43,4 +43,4 @@ for n in G.nodes():
 
 SOC_OUT.parent.mkdir(parents=True, exist_ok=True)
 np.save(SOC_OUT, social_vecs)
-print("✅ social_embeddings salvo:", SOC_OUT, "shape", social_vecs.shape)
+print("[OK] social_embeddings salvo:", SOC_OUT, "shape", social_vecs.shape)

@@ -103,5 +103,5 @@ np.save(NPY_OUT, features)
 # salva subset de colunas
 df[["profile_id", "sex", "age", "img_file", "essay0"]].to_csv(CSV_OUT, index=False)
 
-print("✅ Multimodal salvo:", NPY_OUT, "shape", features.shape)
-print("✅ CSV salvo:", CSV_OUT)
+print("[OK] Multimodal salvo:", NPY_OUT, "shape", features.shape)
+print("[OK] CSV salvo:", CSV_OUT)

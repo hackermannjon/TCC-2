@@ -43,7 +43,7 @@ def preprocess_image(img_path: Path, transform):
 def main():
     paths = load_image_paths(IMG_DIR)
     if not paths:
-        print(f"❌ Não encontrou imagens em {IMG_DIR}")
+        print(f"[ERRO] Não encontrou imagens em {IMG_DIR}")
         return
 
     # Transformações padrão da ResNet
@@ -70,7 +70,7 @@ def main():
     feats_array = np.vstack(all_feats)  # (N,2048)
     OUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     np.save(OUT_FILE, feats_array)
-    print(f"✅ Extraídas {feats_array.shape[0]} features e salvas em {OUT_FILE}")
+    print(f"[OK] Extraídas {feats_array.shape[0]} features e salvas em {OUT_FILE}")
 
 if __name__ == "__main__":
     main()

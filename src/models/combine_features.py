@@ -30,4 +30,4 @@ print("   new shape", X_combined.shape)
 
 OUT.parent.mkdir(parents=True, exist_ok=True)
 np.save(OUT, X_combined)
-print("✅ combined_features salvo:", OUT)
+print("[OK] combined_features salvo:", OUT)

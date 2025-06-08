@@ -21,7 +21,7 @@ def main():
 
     # Device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"▶ Usando dispositivo: {device}")
+    print(f"[INFO] Usando dispositivo: {device}")
 
     # Carrega dataset e pega uma amostra
     ds = GraphRecDataset(FEATS, LOGS, k_social=10)

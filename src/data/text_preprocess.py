@@ -53,7 +53,7 @@ def main():
     emb = make_embeddings(texts)
     EMB_FILE.parent.mkdir(parents=True, exist_ok=True)
     np.save(EMB_FILE, emb)
-    print(f"✅ embeddings salvos em {EMB_FILE} – shape={emb.shape}")
+    print(f"[OK] embeddings salvos em {EMB_FILE} – shape={emb.shape}")
 
 if __name__ == "__main__":
     main()
