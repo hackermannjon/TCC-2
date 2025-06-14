@@ -1,12 +1,7 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Classe do documento
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-% Opções:
-%  - Graduação: bacharelado|engenharia|licenciatura
-%  - Pós-graduação: [qualificacao], mestrado|doutorado, ppca|ppginf
-
-% \documentclass[engenharia]{UnB-CIC}%
 \documentclass[engenharia]{UnB-CIC}%
 \usepackage{pdfpages}% incluir PDFs, usado no apêndice
 \usepackage{natbib}
@@ -15,41 +10,39 @@
 \usepackage{adjustbox}
 
 \counterwithout{figure}{chapter} % Remove a dependência do capítulo
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Informações do Trabalho
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \orientador{\prof \dr Alexandre Ricardo Soares Romariz}{CIC/UnB}%
 %\coorientador{\prof \dr José Ralha}{CIC/UnB}
 \coordenador{\prof \dr João Luiz Azevedo de Carvalho}{Bibliothèque universelle de Genève}%
 \diamesano{12}{agosto}{2024}%
-
-%\membrobanca{\prof \dr Donald Knuth}{Stanford University}%
-%\membrobanca{\dr Leslie Lamport}{Microsoft Research}%
 
 \autor{João Victor Alves dos}{Santos}%
 
 \titulo{MatchPredict AI: Melhorando a Compatibilidade de Relacionamentos em Aplicativos de Namoro}%
 
 \palavraschave{Inteligência Artificial, Relacionamentos Virtuais, Previsão de Sucesso de Relacionamento, trabalho de conclusão de curso}%
-\keywords{Artificial Intelligence, Virtual Relationships,Virtual Relationships, thesis}%
+\keywords{Artificial Intelligence, Virtual Relationships, Relationship Success Prediction, thesis}%
 
 \newcommand{\unbcic}{\texttt{UnB-CIC}}%
 
-
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Texto
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{document}%
 
-    \capitulo{1_Introducao}{Introdução}%
-    \capitulo{2_Analise}{Padrões Comportamentais}%
-    \capitulo{3_Algoritmo}{Fundamentação Teórica}%
-    \capitulo{4_Relacionados}{Trabalhos Relacionados}%
-    \capitulo{4_Conclusao}{Conclusão}%
+\input{tex/1_Introducao}%
+\input{tex/2_Analise}%
+\input{tex/3_Algoritmo}%
+\input{tex/4_Relacionados}%
+\input{tex/5_Conclusao}%
 
-%    \apendice{Apendice_Fichamento}{Fichamento de Artigo Científico}%
-%    \anexo{Anexo1}{Documentação Original \unbcic\ (parcial)}%
+%\apendice{Apendice_Fichamento}{Fichamento de Artigo Científico}%
+%\anexo{Anexo1}{Documentação Original \unbcic\ (parcial)}%
 
 \bibliographystyle{apalike}
+\bibliography{bibliografia}%
 
 \end{document}%

@@ -1,0 +1,20 @@
+% tex/discussao/dis_03_limitacoes.tex
+\section{Limitações do Estudo}
+\label{sec:discussao_limitacoes}
+
+\textbf{Análise Crítica da Metodologia:} \\
+Apesar dos resultados promissores e do atingimento dos objetivos principais, é fundamental reconhecer as limitações inerentes a este estudo. A identificação transparente destas limitações não diminui o valor do trabalho, mas sim contextualiza os achados e abre caminhos para futuras investigações.
+
+\begin{itemize}
+    \item \textbf{Uso de Personas Simuladas:}
+    \\ A limitação primária deste estudo reside no uso de personas simuladas para representar o histórico do usuário. Embora esta abordagem tenha permitido um controle experimental rigoroso para isolar e analisar o comportamento do `UserModel`, ela é uma simplificação da complexidade e da dinâmica dos históricos de usuários reais. As preferências de usuários reais podem ser mais sutis, multifacetadas, evoluir ao longo do tempo de maneiras não lineares e conter tipos de ruído ou padrões de exploração não totalmente capturados pelas nossas simulações (Consistente e Inconsistente). Consequentemente, o desempenho do modelo e suas reações a históricos reais podem diferir daqueles aqui observados.
+
+    \item \textbf{Escopo e Representatividade do Dataset:}
+    \\ O escopo do dataset de 2000 perfis, embora rico em multimodalidade, constitui uma segunda limitação. Este tamanho pode ser considerado modesto para treinar modelos complexos como GNNs e para capturar a vasta diversidade de uma população de usuários em uma plataforma de relacionamento real. A representatividade demográfica e cultural dos datasets OkCupid e SCUT-FBP5500 pode não abranger todo o espectro encontrado em outras regiões ou aplicações, o que pode restringir a capacidade de generalização dos resultados para populações maiores e mais heterogêneas.
+
+    \item \textbf{Simplificação na Modelagem de Features:}
+    \\ Embora o pipeline de features seja abrangente, ele ainda representa uma simplificação da realidade. As features de imagem, extraídas de uma ResNet50, capturam padrões visuais complexos, mas não necessariamente todos os aspectos da atratividade, como estilo pessoal ou o contexto da foto. Similarmente, a inferência de traços de personalidade através de um léxico de palavras é uma aproximação e não substitui um inventário psicológico validado.
+
+    \item \textbf{Natureza Estática da Modelagem:}
+    \\ O estudo foca em um "snapshot" das preferências do usuário, representado por um histórico fixo. O modelo atual não foi projetado para capturar explicitamente a evolução temporal das preferências, ou seja, como o gosto de um usuário pode mudar após semanas ou meses de uso do aplicativo. Sistemas de recomendação em produção frequentemente precisam lidar com essa dinâmica para se manterem relevantes.
+\end{itemize}

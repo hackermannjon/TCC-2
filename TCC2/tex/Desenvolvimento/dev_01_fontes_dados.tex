@@ -1,0 +1,26 @@
+% tex/Desenvolvimento/dev_01_fontes_dados.tex
+\section{Fontes de Dados e Construção do Dataset}
+\label{sec:dev_fontes_dados}
+
+\textbf{Estratégia de Coleta e Fusão:} \\
+A construção de um sistema de recomendação robusto e eficaz, como o MatchPredict-AI, depende fundamentalmente da qualidade e da diversidade dos dados utilizados para treinamento e avaliação. A premissa central deste trabalho é que a afinidade em relacionamentos é um fenômeno multimodal, influenciado por uma complexa interação de fatores textuais, demográficos e visuais. Para capturar essa complexidade, a estratégia adotada foi a fusão de dois conjuntos de dados públicos distintos, cada um especializado em uma modalidade de informação, visando criar um dataset final de 2000 perfis que fosse completo e rico em características.
+
+\subsection{Dataset de Conteúdo Textual e Demográfico: OkCupid}
+\textbf{Descrição:} \\
+A base para os dados comportamentais e demográficos foi extraída de uma versão pública do dataset do **OkCupid**. Esta fonte de dados é amplamente reconhecida na comunidade de pesquisa por sua riqueza em informações auto-descritivas fornecidas pelos usuários no formato de ensaios textuais. Para este trabalho, foi utilizado especificamente o campo `essay0`, que corresponde à biografia principal onde os usuários se descrevem livremente. Este texto aberto é um recurso valioso para a aplicação de técnicas de Processamento de Linguagem Natural (PLN) para inferir interesses, estilo de comunicação e até traços de personalidade.
+
+\textbf{Contextualização e Uso:} \\
+Além do conteúdo textual, o dataset OkCupid fornece dados demográficos estruturados, como idade e sexo, que foram diretamente incorporados como features no nosso modelo. A natureza inerentemente heterogênea do dataset OkCupid -- combinando texto não estruturado com atributos categóricos e numéricos -- o torna uma fonte ideal para a extração de um conjunto abrangente de features descritivas dos perfis, fundamentais para a modelagem da compatibilidade.
+
+\subsection{Dataset de Conteúdo Visual: SCUT-FBP5500}
+\textbf{Descrição:} \\
+Para o componente visual, que desempenha um papel inegável na formação de interesse inicial em plataformas de relacionamento, foi incorporado o dataset **SCUT-FBP5500 (Facial Beauty Prediction)** \textcolor{blue}{[\cite{wang2018scut}]}. Trata-se de um dataset de benchmark público e amplamente utilizado na pesquisa de predição de beleza facial. Ele é composto por 5500 imagens faciais frontais, com diversidade de gênero (masculino/feminino) e etnia (asiáticos e caucasianos), cada uma acompanhada por um escore de beleza atribuído por múltiplos avaliadores.
+
+\textbf{Contextualização e Uso:} \\
+A utilização deste dataset especializado como fonte para as imagens dos perfis permitiu a associação de imagens de alta qualidade e com iluminação controlada aos perfis textuais do OkCupid. A premissa é que, ao extrair features visuais dessas imagens através de modelos de visão computacional, seria possível capturar elementos relacionados à atratividade física, um componente que, embora subjetivo, é de grande importância no contexto do projeto.
+
+\subsection{Processo de Curadoria e Fusão do Dataset Final}
+\textbf{Explicação Detalhada:} \\
+A criação do conjunto de dados final de 2000 perfis envolveu um processo criterioso de mapeamento, seleção e combinação. O objetivo foi assegurar que cada uma das 2000 instâncias finais contivesse um conjunto completo e alinhado de informações multimodais. O processo, implementado no script `src/models/features.py`, consistiu em parear os perfis do OkCupid com as imagens do SCUT-FBP5500, utilizando um sistema de indexação para encontrar correspondências.
+
+O critério de inclusão para um perfil no dataset final era rigoroso: o perfil deveria possuir simultaneamente (1) um ensaio textual (`essay0`) não nulo e (2) uma imagem correspondente válida e localizada no sistema de arquivos. Perfis que não atendiam a ambos os requisitos foram descartados. Este processo de seleção e combinação buscou garantir não apenas a quantidade, mas também a integridade e a diversidade necessárias para treinar um modelo de recomendação capaz de aprender padrões complexos, evitando vieses que poderiam surgir de amostras de dados incompletas ou homogêneas.

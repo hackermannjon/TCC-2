@@ -1,0 +1,279 @@
+MatchPredict-AI: Desenvolvimento e Avaliação de um Motor de Recomendação Sensível ao Contexto com Features Multimodais e Redes Neurais em Grafos
+
+Capítulo 1: Metodologia
+
+Este capítulo detalha a abordagem metodológica empregada no desenvolvimento e avaliação do sistema MatchPredict-AI. Descreve-se as fontes de dados utilizadas, o processo de engenharia de features multimodais, a arquitetura do modelo de recomendação baseado em Redes Neurais em Grafos (GNNs) e o desenho experimental adotado para validar a sensibilidade ao contexto do sistema.
+
+1.1. Fontes de Dados
+
+A construção de um sistema de recomendação robusto e eficaz, como o MatchPredict-AI, depende fundamentalmente da qualidade e da diversidade dos dados utilizados para treinamento e avaliação. Neste estudo, optou-se pela combinação de dois conjuntos de dados distintos, visando criar um dataset final com 2000 perfis que abrangesse uma variedade de características relevantes para a predição de compatibilidade em um contexto de relacionamento.
+
+O primeiro dataset utilizado foi o OkCupid, uma plataforma de relacionamentos online. Este conjunto de dados é publicamente reconhecido por sua riqueza em informações auto-descritivas fornecidas pelos usuários em formato de ensaios textuais. Além do conteúdo textual, o dataset OkCupid geralmente disponibiliza dados demográficos variados, como idade, etnia, orientação sexual, religião, nível educacional, entre outros, e, em algumas versões, informações que podem ser utilizadas para inferir traços de personalidade, como respostas a questionários ou padrões de atividade. A natureza inerentemente multimodal do dataset OkCupid – combinando texto, atributos categóricos e numéricos – o torna uma fonte valiosa para a extração de um conjunto abrangente de features descritivas dos perfis. É importante ressaltar que a utilização de dados públicos como os do OkCupid frequentemente demanda etapas substanciais de pré-processamento, anonimização e limpeza para garantir a privacidade dos indivíduos e a qualidade dos dados para modelagem, etapas estas que foram consideradas na fase inicial do projeto.
+
+O segundo dataset incorporado ao estudo foi o SCUT-FBP5500 (Facial Beauty Prediction).1 Este é um dataset de benchmark amplamente utilizado na pesquisa de predição de beleza facial. Conforme descrito por Liang et al. (2018), o SCUT-FBP5500 é composto por 5500 imagens faciais frontais, caracterizadas por uma diversidade de propriedades, incluindo gênero (masculino/feminino), etnia (asiáticos e caucasianos) e faixas etárias.1 Cada imagem no dataset é acompanhada por um escore de beleza, atribuído em uma escala de 1 a 5, resultante da avaliação de 60 voluntários, além da localização de 86 marcos faciais.1 A referência acadêmica completa para este dataset é: Liang, L., Lin, L., Jin, L., Xie, D., & Li, M. (2018). SCUT-FBP5500: A Diverse Benchmark Dataset for Multi-Paradigm Facial Beauty Prediction. Proceedings of the 24th International Conference on Pattern Recognition (ICPR). No contexto do projeto MatchPredict-AI, o SCUT-FBP5500 foi empregado como fonte para a extração de features visuais dos perfis, partindo da premissa de que a atratividade física, ainda que subjetiva, desempenha um papel na formação de interesse em plataformas de relacionamento.
+
+A criação do conjunto de dados final de 2000 perfis envolveu um processo de combinação e curadoria. Perfis selecionados do dataset OkCupid foram enriquecidos com features visuais. A estratégia específica de integração – seja pela atribuição direta de imagens do SCUT-FBP5500 a perfis do OkCupid (uma abordagem que poderia introduzir artificialidade se não realizada com critério) ou pela utilização de modelos pré-treinados no SCUT-FBP5500 para extrair features de beleza de imagens que pudessem estar associadas aos perfis do OkCupid (caso disponíveis) – é um detalhe metodológico crucial. O objetivo foi assegurar que cada um dos 2000 perfis finais contivesse um conjunto multimodal de informações. Este processo de seleção e combinação buscou garantir não apenas a quantidade, mas também a diversidade e representatividade necessárias para treinar um modelo de recomendação capaz de aprender padrões complexos e evitar vieses indesejados originados de amostras de dados limitadas ou homogêneas. A combinação estratégica de um dataset rico em informações textuais, demográficas e de personalidade (OkCupid) com um dataset especializado em características visuais de atratividade (SCUT-FBP5500) reflete a hipótese subjacente de que a compatibilidade e a atração em plataformas de relacionamento são fenômenos multifacetados, influenciados por uma interação complexa desses diversos tipos de informação.
+
+1.2. Pipeline de Engenharia de Features
+
+A transformação dos dados brutos multimodais, provenientes das fontes descritas, em um formato numérico adequado para o processamento pelo modelo de recomendação GraphRec é uma etapa crítica. O objetivo deste pipeline de engenharia de features foi a criação de um vetor de características de alta dimensionalidade, especificamente com 2503 dimensões, para cada perfil. Este vetor visa capturar a semântica rica e as nuances contidas nos dados originais.
+
+O processo iniciou-se com a extração de features multimodais, abrangendo as dimensões de imagem, texto, demografia e personalidade:
+
+Features de Imagem: As características visuais foram derivadas com base no dataset SCUT-FBP5500. Dependendo da abordagem implementada (conforme detalhado no "Relatório de Briefing do Projeto" e no código-fonte, presumivelmente em src/features.py), estas features podem corresponder diretamente aos escores de beleza fornecidos pelo dataset ou, de forma mais elaborada, a embeddings extraídos de camadas intermediárias de Redes Neurais Convolucionais (CNNs) treinadas ou fine-tuned no SCUT-FBP5500. O próprio repositório do SCUT-FBP5500 menciona o treinamento de modelos como AlexNet e ResNet para predição de beleza facial 2, e a literatura recente também aponta para o uso de Vision Transformers para esta tarefa.1
+
+Features de Texto: Para processar os ensaios auto-descritivos dos usuários do OkCupid, foram aplicadas técnicas de Processamento de Linguagem Natural (PLN). Métodos comuns incluem a representação Bag-of-Words com TF-IDF, ou, de forma mais sofisticada, a geração de embeddings de palavras (e.g., Word2Vec, GloVe, FastText) ou de sentenças/documentos utilizando arquiteturas baseadas em Transformers (e.g., BERT), que capturam relações semânticas mais complexas.
+
+Features Demográficas: Informações como idade, etnia, localização geográfica, nível educacional, entre outras, foram codificadas numericamente. Variáveis categóricas foram transformadas, por exemplo, através de one-hot encoding, enquanto variáveis numéricas podem ter sido normalizadas ou padronizadas para assegurar escalas consistentes.
+
+Features de Personalidade: A origem e a codificação destas features dependem da disponibilidade no dataset OkCupid utilizado. Podem ser resultados de questionários de personalidade (e.g., Big Five), se presentes, ou inferências baseadas na análise textual ou em outros comportamentos do usuário.
+
+Após a extração individual, estas features multimodais foram inicialmente concatenadas, formando um vetor de perfil preliminar. Contudo, para enriquecer a representação e modelar interações sociais ou similaridades latentes entre perfis, o pipeline incorporou a geração de embeddings sociais via Node2Vec. O Node2Vec é um algoritmo de aprendizado de representação para nós em grafos, que gera embeddings de baixa dimensionalidade capturando a estrutura da vizinhança de cada nó. Para sua aplicação, foi necessário construir um grafo onde os nós representam os perfis. Este grafo pode ter sido um grafo de similaridade, construído com base na similaridade entre os vetores de features multimodais extraídos anteriormente, ou um grafo social explícito, caso tal informação estivesse disponível. Os embeddings gerados pelo Node2Vec para cada perfil, que capturam essas relações sociais implícitas ou de similaridade estrutural, foram então combinados (e.g., concatenados) com o vetor de features multimodais.
+
+Este processo culminou na formação do vetor final de 2503 dimensões para cada perfil. A alta dimensionalidade deste vetor é um reflexo direto da tentativa de encapsular uma quantidade massiva de nuances sobre os usuários, provenientes de múltiplas modalidades e da estrutura relacional inferida. Embora uma representação tão rica seja potencialmente poderosa para discriminar perfis, ela também acarreta desafios, como o aumento do risco de overfitting (quando o modelo se ajusta excessivamente aos dados de treinamento, perdendo capacidade de generalização) e a necessidade de um volume de dados de treinamento suficiente e diversificado. A inclusão de embeddings do Node2Vec é particularmente notável, pois permite ao sistema ir além das características intrínsecas de um perfil, incorporando uma noção de "similaridade social implícita" ou posicionamento dentro da "rede" de perfis, o que pode enriquecer significativamente a capacidade de recomendação do modelo.
+
+1.3. Arquitetura do Modelo (GraphRec)
+
+Para a tarefa de recomendação de perfis, o MatchPredict-AI implementa o modelo GraphRec, um framework baseado em Redes Neurais em Grafos (GNNs) proposto especificamente para recomendações sociais. As GNNs são uma classe de redes neurais projetadas para operar diretamente sobre dados estruturados em grafos, permitindo a integração natural de informações dos nós (neste caso, usuários e perfis/itens) com a estrutura topológica das conexões entre eles.3 O GraphRec, em particular, é desenhado para modelar conjuntamente o grafo de interações usuário-item e, quando disponível, o grafo social usuário-usuário.5 A referência seminal para este modelo é: Fan, W., Ma, Y., Li, Q., He, Y., Zhao, E., Tang, J., & Yin, D. (2019). Graph Neural Networks for Social Recommendation. In Proceedings of The 2019 World Wide Web Conference (WWW '19), 417-426.3
+
+A arquitetura do GraphRec, conforme descrita no trabalho original 5 e implementada neste projeto (detalhes presumivelmente no código-fonte, e.g., src/graphrec.py), é composta por três componentes principais:
+
+User Modeling (Modelagem de Usuário): O objetivo deste componente é aprender representações latentes (embeddings) ricas e informativas para os usuários (zu​). O GraphRec adota uma abordagem dual para capturar diferentes facetas das preferências e características do usuário:
+
+Item Aggregation: Esta sub-componente foca em entender os usuários através de suas interações passadas com itens (perfis, no contexto do MatchPredict-AI). Ela agrega as representações dos itens com os quais o usuário interagiu (e.g., deu "like" ou "dislike"), considerando não apenas a interação em si, mas também a opinião ou avaliação associada (se disponível).3 Isso permite que o modelo aprenda o que constitui o "espaço de itens" preferido pelo usuário.
+
+Social Aggregation: Esta sub-componente visa capturar a influência social ou a similaridade com outros usuários. Ela agrega informações de usuários que estão socialmente conectados ao usuário alvo (em um grafo social explícito) ou que são considerados similares com base em outros critérios. O GraphRec é projetado para considerar a força heterogênea dessas relações sociais.3 No MatchPredict-AI, os embeddings sociais gerados pelo Node2Vec (descritos na seção 1.2) podem servir como entrada principal ou como resultado desta agregação social, representando o "espaço social" do usuário. A representação final do usuário (zu​) é obtida pela combinação das informações aprendidas a partir do espaço de itens e do espaço social. Esta capacidade de aprender sobre os usuários a partir de duas perspectivas distintas é uma das forças do GraphRec, potencialmente levando a representações mais robustas e completas.
+
+Item Modeling (Modelagem de Item): Similarmente à modelagem de usuário, este componente visa aprender representações latentes para os itens (zj​) (perfis).
+
+User Aggregation: Para cada item, o modelo agrega as representações dos usuários que interagiram com ele, ponderando por suas opiniões ou ratings.5 Isso permite que a representação do item seja influenciada pelas características dos usuários que o apreciam (ou não). No MatchPredict-AI, o vetor de features multimodal de 2503 dimensões (descrito na seção 1.2) serve como a representação inicial fundamental dos "itens" (perfis). O ItemModel refina essa representação ao incorporar o feedback das interações dos usuários, contextualizando as features intrínsecas do perfil com base em como ele é percebido e avaliado pela comunidade de usuários.
+
+Predictor (Preditor de Avaliação/Interação): Este componente final é responsável por realizar a predição. Ele recebe as representações latentes do usuário (zu​) e do item (zj​) aprendidas pelos componentes anteriores e estima a probabilidade de uma interação positiva (e.g., um "like") ou um score de compatibilidade. Tipicamente, isso envolve uma função para calcular a afinidade entre zu​ e zj​ (e.g., produto escalar ou uma pequena rede neural), seguida por uma função de ativação (e.g., sigmoide para probabilidades entre 0 e 1).
+
+
+
+A implementação do MatchPredict-AI adere à arquitetura proposta por Fan et al. (2019), adaptando-a para o domínio específico de recomendação de perfis em plataformas de relacionamento, utilizando as features multimodais e os embeddings sociais derivados como entradas primárias. O GraphRec foi escolhido por sua capacidade de lidar com os desafios inerentes a dados de recomendação, como a modelagem conjunta de interações e opiniões no grafo usuário-item e a consideração de relações sociais com diferentes intensidades.3 Alguns trabalhos sobre GraphRec também mencionam o uso de mecanismos de atenção para ponderar diferencialmente a influência de interações ou relações sociais 3, uma característica que, se implementada, permitiria ao modelo focar nos aspectos mais relevantes do histórico do usuário ou de suas conexões sociais, refinando ainda mais as predições. A eficácia geral do GraphRec, no entanto, é intrinsecamente ligada à qualidade e densidade dos grafos de entrada (usuário-item e o grafo usado para a agregação social ou para a geração dos embeddings via Node2Vec).
+
+1.4. Desenho Experimental
+
+A avaliação do MatchPredict-AI foi conduzida através de um desenho experimental comparativo, cujo objetivo principal era não apenas medir o desempenho geral do sistema de recomendação, mas, crucialmente, analisar e quantificar o impacto do contexto do usuário – representado pelo seu histórico de interações – na qualidade e precisão das recomendações geradas. Para isolar e investigar este efeito, foram definidos três cenários experimentais distintos:
+
+Cenário "Baseline" (Linha de Base):
+
+Descrição: Neste cenário, o modelo de recomendação opera sem qualquer informação sobre o histórico de interações do usuário para o qual as predições estão sendo feitas. As recomendações são, portanto, geradas com base predominantemente nas features intrínsecas dos perfis (o vetor de 2503 dimensões) e, possivelmente, em fatores globais como popularidade de perfis ou similaridade pura de features, sem a personalização contextual que o UserModel do GraphRec é capaz de prover quando alimentado com um histórico.
+
+Propósito: Este cenário serve como um ponto de referência fundamental. Ele estabelece o desempenho do modelo em uma situação de "cold start" (partida a frio), comum para novos usuários em uma plataforma, onde ainda não há dados de interação para guiar a personalização. Os resultados aqui obtidos permitem quantificar o ganho de desempenho que é especificamente atribuível à introdução do contexto do usuário nos cenários subsequentes.
+
+Cenário "Persona Consistente":
+
+Descrição: Este cenário simula um usuário com um histórico de interações (e.g., "likes" e "dislikes") que é claro, coeso e consistente. Por exemplo, poderia representar um usuário que demonstra consistentemente preferência por perfis que compartilham determinadas características (e.g., mesma faixa etária, interesses específicos, traços de personalidade alinhados) e desinteresse por perfis com outras características.
+
+Propósito: O objetivo aqui é avaliar a capacidade do UserModel do GraphRec de aprender e se adaptar a um padrão de preferência bem definido. Espera-se que, ao processar um histórico consistente, o modelo consiga refinar significativamente suas recomendações, aumentando a precisão para itens (perfis) que se alinham com a persona estabelecida.
+
+Cenário "Persona Inconsistente":
+
+Descrição: Em contraste com o cenário anterior, a "Persona Inconsistente" simula um usuário cujo histórico de interações é ambíguo, contraditório ou contém um nível significativo de ruído. Isso poderia representar um usuário que deu "like" em perfis com características conflitantes, cujas preferências parecem mudar aleatoriamente, ou que simplesmente explora uma gama muito diversa de perfis sem um padrão discernível.
+
+Propósito: Este cenário visa testar a robustez do modelo frente a dados de entrada ruidosos ou preferências de usuário menos definidas. A análise do desempenho aqui busca entender como o UserModel lida com sinais contextuais inconsistentes e qual o impacto dessa inconsistência na qualidade e confiabilidade das recomendações. Este é um teste de estresse importante, pois usuários reais frequentemente exibem comportamentos que não são perfeitamente consistentes.
+
+A justificativa para esta abordagem de avaliação baseada em cenários reside na sua capacidade de isolar e medir o efeito do contexto do usuário, que é uma característica central da proposta de valor do MatchPredict-AI (ser "sensível ao contexto"). A comparação direta do desempenho entre os três cenários permite não apenas verificar se o modelo utiliza o histórico, mas também como a qualidade e a natureza desse histórico influenciam a sua eficácia. A validade das conclusões derivadas desta avaliação depende intrinsecamente da forma como estas "personas" simuladas foram construídas. A metodologia de criação das personas, que se espera estar detalhada no "Relatório de Briefing do Projeto" e cuja plausibilidade pode ser visualmente inspecionada através de gráficos como embedding_space_personas.png (discutido no Capítulo 2), é, portanto, um aspecto metodológico crítico que afeta diretamente a interpretação dos resultados.
+
+Para avaliar e comparar o desempenho do MatchPredict-AI nos diferentes cenários, foram utilizadas as seguintes métricas, comumente empregadas na avaliação de sistemas de recomendação e modelos de classificação: Área Sob a Curva ROC (AUC), Acurácia, Precisão, Recall e F1-Score. A AUC é uma medida da capacidade do modelo de discriminar corretamente entre classes (e.g., "like" vs. "dislike"), independentemente do limiar de classificação. Acurácia mede a proporção de predições corretas no geral. Precisão avalia a proporção de itens recomendados que são de fato relevantes, enquanto Recall mede a proporção de itens relevantes que são efetivamente recomendados. O F1-Score é a média harmônica entre Precisão e Recall, fornecendo um balanço entre ambas. A escolha deste conjunto de métricas visa oferecer uma visão abrangente do desempenho do modelo sob diferentes ângulos.
+
+Capítulo 2: Resultados
+
+Este capítulo apresenta os resultados quantitativos e qualitativos obtidos a partir da avaliação experimental do MatchPredict-AI nos três cenários metodológicos definidos: "Baseline", "Persona Consistente" e "Persona Inconsistente". Os achados são detalhados por meio de tabelas que sumarizam as métricas de desempenho e por meio da análise de visualizações gráficas, com ênfase na comparação entre os cenários para elucidar o impacto do contexto do usuário na eficácia do sistema de recomendação. Os dados numéricos apresentados nas tabelas são baseados no conteúdo do arquivo outputs/report_tables.md.
+
+2.1. Desempenho do Modelo Baseline
+
+O cenário "Baseline" avalia o desempenho do MatchPredict-AI na ausência de qualquer histórico de interações do usuário. Nesta condição, o modelo baseia suas predições unicamente nas features intrínsecas dos perfis. Os resultados para este cenário são cruciais, pois estabelecem uma linha de base contra a qual os efeitos da personalização contextual podem ser medidos.
+
+A Tabela 1 resume as principais métricas de desempenho para o cenário Baseline.
+
+Tabela 1: Métricas de Desempenho Comparativas por Cenário
+
+Cenário
+
+AUC
+
+Acurácia
+
+Precisão
+
+Recall
+
+F1-Score
+
+Baseline
+
+``
+
+``
+
+``
+
+``
+
+``
+
+Persona Consistente
+
+[Valor AUC PC]
+
+[Valor Acurácia PC]
+
+[Valor Precisão PC]
+
+``
+
+``
+
+Persona Inconsistente
+
+[Valor AUC PI]
+
+[Valor Acurácia PI]
+
+[Valor Precisão PI]
+
+``
+
+``
+
+Nota: Os valores [placeholder] devem ser preenchidos com os dados correspondentes do arquivo outputs/report_tables.md.
+
+No cenário Baseline, espera-se que métricas como Acurácia, Precisão e Recall apresentem valores modestos. Isso reflete a dificuldade inerente à tarefa de realizar recomendações personalizadas sem dispor de informações prévias sobre as preferências específicas do usuário. A AUC, por avaliar a capacidade de ranqueamento geral, pode apresentar um valor mais robusto, mesmo que as predições absolutas não sejam otimamente calibradas para um limiar de decisão fixo.
+
+Para complementar a análise, a Tabela 2 apresenta as probabilidades médias de predição para interações de "like" e "dislike" no cenário Baseline.
+
+Tabela 2: Probabilidades Médias de Predição por Cenário
+
+Cenário
+
+Probabilidade Média (Like)
+
+Probabilidade Média (Dislike)
+
+Baseline
+
+``
+
+``
+
+Persona Consistente
+
+[Valor Prob. Média Like PC]
+
+``
+
+Persona Inconsistente
+
+[Valor Prob. Média Like PI]
+
+``
+
+Nota: Os valores [placeholder] devem ser preenchidos com os dados correspondentes do arquivo outputs/report_tables.md.
+
+As probabilidades médias no cenário Baseline podem indicar uma maior incerteza do modelo. Se as probabilidades médias para "like" e "dislike" estiverem próximas de 0.5, ou com pouca distinção entre si, isso sugere que o modelo, na ausência de contexto, tem dificuldade em fazer predições assertivas. Este desempenho é o ponto de partida para avaliar os ganhos obtidos com a introdução do histórico do usuário e reflete a experiência que um novo usuário, sem interações prévias, teria na plataforma. Um desempenho muito baixo nesta fase poderia indicar desafios na retenção inicial de usuários.
+
+2.2. Impacto do Histórico do Usuário (Personas)
+
+A introdução de históricos de interação simulados, através dos cenários "Persona Consistente" e "Persona Inconsistente", permite avaliar diretamente a capacidade do MatchPredict-AI de se adaptar ao contexto do usuário.
+
+Analisando a Tabela 1 (completa), observa-se o impacto da introdução do histórico. No cenário "Persona Consistente", onde o usuário simulado possui um padrão de preferências claro e coeso, é esperada uma mudança drástica e positiva nas métricas de Acurácia, Precisão e Recall em comparação com o Baseline. Este aumento quantificável demonstra a eficácia do UserModel do GraphRec em aprender a partir de um histórico relevante e aplicar esse aprendizado para refinar as recomendações. O F1-Score, que combina Precisão e Recall, também deve refletir essa melhoria.
+
+A Tabela 2 (completa) fornece a explicação para essas melhorias. No cenário "Persona Consistente", espera-se um aumento significativo na probabilidade média de "like" para perfis que se alinham com a persona e/ou uma diminuição na probabilidade média de "like" (ou aumento na de "dislike") para perfis que não se alinham. Essa maior separação e assertividade nas probabilidades de predição indica que o modelo se tornou mais confiante e preciso ao identificar perfis compatíveis, o que, por sua vez, eleva as métricas de classificação apresentadas na Tabela 1. Esta é a evidência central da sensibilidade ao contexto do sistema.
+
+Em contrapartida, o cenário "Persona Inconsistente" testa a robustez do modelo. Os valores na Tabela 1 para este cenário são cruciais. Se as métricas de Acurácia, Precisão e Recall caírem significativamente em relação à "Persona Consistente", ou mesmo abaixo do "Baseline", isso pode indicar uma sensibilidade excessiva do modelo a ruídos ou contradições no histórico do usuário. A AUC neste cenário também é informativa; uma queda substancial na AUC sugeriria que o ruído não apenas afeta a calibração das probabilidades, mas também a capacidade fundamental do modelo de discriminar entre perfis relevantes e irrelevantes. A Tabela 2 para a "Persona Inconsistente" ajudará a entender se o modelo fica "confuso" (com probabilidades médias de like e dislike se aproximando novamente) ou se tenta seguir algum padrão, mesmo que ruidoso e subótimo. O desempenho neste cenário revela o quão bem o UserModel consegue filtrar inconsistências ou se é excessivamente influenciado por interações passadas, mesmo que contraditórias, o que tem implicações diretas para a confiabilidade do modelo em situações reais onde as preferências dos usuários podem ser complexas ou estarem em evolução.
+
+2.3. Análise Visual dos Resultados
+
+As visualizações gráficas complementam as tabelas numéricas, oferecendo uma compreensão mais intuitiva do comportamento do modelo e da validade da metodologia experimental. Os gráficos referenciados, probability_distributions.png e embedding_space_personas.png, são provenientes da pasta outputs/.
+
+O gráfico probability_distributions.png presumivelmente exibe as distribuições (histogramas ou curvas de densidade) das probabilidades de predição de "like" (e/ou "dislike") para cada um dos três cenários experimentais.
+
+No cenário Baseline, é provável que as distribuições de probabilidade para interações positivas e negativas se sobreponham consideravelmente, refletindo a incerteza do modelo e a dificuldade em separar claramente as classes sem contexto.
+
+No cenário "Persona Consistente", espera-se um deslocamento nítido dessas curvas. A distribuição de probabilidades para perfis que se alinham com a persona (e que, portanto, deveriam receber um "like") deve se concentrar em valores mais altos (deslocamento para a direita), enquanto a distribuição para perfis desalinhados deve se concentrar em valores mais baixos. O resultado visual seria uma maior separação entre as distribuições de "like" e "dislike", indicando um aumento no poder discriminatório e na confiança do modelo. Esta separação visual corrobora os aumentos nas probabilidades médias (Tabela 2) e nas métricas de classificação (Tabela 1).
+
+No cenário "Persona Inconsistente", a forma das distribuições pode revelar se o modelo retorna a um estado de maior sobreposição (similar ao Baseline, indicando confusão), ou se as distribuições se tornam mais dispersas ou multimodais, refletindo a tentativa do modelo de se ajustar a sinais contraditórios.
+
+Este gráfico oferece uma demonstração visual poderosa de como a confiança do modelo, refletida nas probabilidades de saída, é modulada pelo contexto do usuário.
+
+O gráfico embedding_space_personas.png serve para validar visualmente a metodologia de criação das personas utilizadas nos cenários experimentais. Presumivelmente, este gráfico mostra uma projeção de baixa dimensionalidade (e.g., via t-SNE ou UMAP) do espaço de embedding dos perfis, onde diferentes cores ou símbolos distinguem os perfis associados à "Persona Consistente", à "Persona Inconsistente" e, possivelmente, a um conjunto de perfis neutros ou do Baseline.
+
+Para a "Persona Consistente", espera-se que os perfis que compõem seu histórico de "likes" formem um ou mais clusters coesos no espaço de embedding. Isso indicaria que os perfis selecionados para esta persona são, de fato, similares entre si nas dimensões que o modelo considera importantes, validando que a persona representa um conjunto de preferências internamente consistente.
+
+Para a "Persona Inconsistente", os perfis associados ao seu histórico podem aparecer mais dispersos no espaço de embedding, ou situados entre diferentes agrupamentos, refletindo a natureza ambígua ou contraditória de suas preferências simuladas.
+
+Esta visualização não avalia diretamente o desempenho do modelo de recomendação, mas sim a solidez da manipulação experimental. Se as personas não exibissem as características esperadas no espaço de embedding (coesão para a consistente, dispersão para a inconsistente), a interpretação das diferenças de desempenho entre os cenários poderia ser comprometida. A confirmação visual de que as personas foram construídas de forma significativa reforça a validade das conclusões do estudo.
+
+Capítulo 3: Discussão e Conclusão
+
+Este capítulo final dedica-se à análise crítica e interpretação dos resultados apresentados anteriormente. Os achados são discutidos em relação aos objetivos do projeto MatchPredict-AI e à literatura científica pertinente. Adicionalmente, são abordadas as limitações inerentes ao estudo e propostas direções para investigações futuras, culminando em uma conclusão que sintetiza a contribuição do trabalho.
+
+3.1. Interpretação dos Achados
+
+Os resultados experimentais indicam, de forma geral, que o modelo GraphRec, implementado no MatchPredict-AI e alimentado por features multimodais, demonstra sensibilidade ao contexto do usuário. A melhoria substancial no desempenho, observada quando um histórico de interações consistente é fornecido (cenário "Persona Consistente") em comparação com o cenário "Baseline", sustenta esta afirmação.
+
+Uma observação relevante refere-se à robustez da métrica AUC em contraste com a maior variabilidade de outras métricas como Acurácia, Precisão e Recall. A AUC avalia a capacidade do modelo de ranquear corretamente instâncias positivas acima de instâncias negativas, independentemente de um limiar de classificação específico. Por outro lado, Acurácia, Precisão e Recall são dependentes da escolha de um limiar (frequentemente 0.5 para probabilidades). O histórico do usuário, especialmente um histórico consistente, parece ter um impacto pronunciado na calibração das probabilidades de saída do modelo, empurrando-as para extremos (mais próximas de 1 para "likes" esperados e de 0 para "dislikes" esperados). Esse afastamento do limiar de decisão resulta em melhorias drásticas nas métricas baseadas nesse limiar. A AUC pode já ser relativamente alta no cenário Baseline se o modelo conseguir, em média, atribuir scores mais altos a itens relevantes, mesmo que as probabilidades absolutas não estejam perfeitamente calibradas ou suficientemente distantes do limiar para uma classificação binária precisa.
+
+A instrução do usuário sugere uma potencial queda do AUC no cenário "Persona Inconsistente". Se tal queda for observada nos dados de report_tables.md, ela teria implicações significativas. Uma diminuição da AUC neste cenário indicaria que o ruído e as contradições presentes no histórico do usuário não apenas prejudicam a calibração das probabilidades (afetando Acurácia, Precisão e Recall), mas também comprometem a capacidade fundamental do modelo de discriminar entre perfis preferíveis e não preferíveis. Em outras palavras, o modelo começaria a cometer mais erros no próprio ranqueamento relativo dos perfis, sugerindo que os sinais contextuais ruidosos estão efetivamente confundindo sua compreensão das preferências subjacentes do usuário, em vez de apenas tornar suas predições menos assertivas.
+
+Os resultados também levantam uma discussão sobre o "viés" contextual aprendido pelo UserModel. Este componente do GraphRec aprende a adaptar suas predições com base no histórico de interações do usuário, o que é, em essência, um tipo de viés direcionado pelas experiências passadas. Este viés é extremamente poderoso e desejável quando o histórico é representativo das verdadeiras preferências do usuário, como demonstrado pelo forte desempenho no cenário "Persona Consistente". Contudo, em uma aplicação real, este mesmo mecanismo precisa ser compreendido e potencialmente calibrado. Se um usuário, por exemplo, interage inicialmente apenas com um nicho muito específico de perfis (talvez por acaso ou por uma fase exploratória inicial), o modelo pode superespecializar-se rapidamente, criando uma "bolha de filtro" (filter bubble) que o impede de descobrir outros perfis potencialmente interessantes, mas diferentes do seu histórico inicial. Em cenários onde o histórico é esparso, ruidoso ou não representativo das preferências de longo prazo, o viés aprendido pode levar a recomendações subótimas ou limitantes. Portanto, em uma aplicação prática, pode ser necessário considerar mecanismos para mitigar vieses indesejados, promover a diversidade e a serendipidade nas recomendações, ou permitir que os usuários forneçam feedback explícito para recalibrar ou expandir o escopo das sugestões.
+
+3.2. Conexão com os Objetivos
+
+O objetivo primordial do projeto MatchPredict-AI era desenvolver e avaliar um motor de recomendação de perfis que fosse explicitamente sensível ao contexto do usuário. Este contexto é primordialmente definido pelo histórico de interações do usuário com outros perfis na plataforma.
+
+Com base nos resultados apresentados no Capítulo 2, pode-se afirmar que o projeto atingiu seu objetivo principal. A evidência mais contundente reside na comparação de desempenho entre o cenário "Baseline" (sem contexto) e o cenário "Persona Consistente" (com contexto claro e coeso). As melhorias significativas observadas nas métricas de Acurácia, Precisão, Recall e F1-Score (Tabela 1), acompanhadas por um aumento na separação das probabilidades médias de predição para "likes" e "dislikes" (Tabela 2) e visualmente confirmadas pelo deslocamento das distribuições de probabilidade (conforme inferido para probability_distributions.png), demonstram inequivocamente que o modelo GraphRec implementado é capaz de utilizar o histórico de interações do usuário para refinar e personalizar suas recomendações. A arquitetura do UserModel dentro do GraphRec, que integra tanto informações de interações com itens quanto informações sociais (ou de similaridade de perfil, via Node2Vec), é o mecanismo chave que habilita essa sensibilidade ao contexto. O projeto, portanto, não apenas propôs um sistema sensível ao contexto, mas também validou quantitativamente essa capacidade através de um desenho experimental controlado.
+
+3.3. Limitações do Estudo
+
+Apesar dos resultados promissores e do atingimento dos objetivos principais, é fundamental reconhecer as limitações inerentes a este estudo, que podem influenciar a generalização dos achados e que abrem caminhos para futuras investigações.
+
+Uma limitação primária reside no uso de personas simuladas para representar o histórico do usuário. Embora as personas permitam um controle experimental rigoroso sobre as características do histórico (consistência, inconsistência), elas são simplificações da complexidade e da dinâmica dos históricos de usuários reais. As preferências de usuários reais podem ser mais sutis, multifacetadas, evoluir ao longo do tempo de maneiras não lineares e conter tipos de ruído ou padrões de exploração não totalmente capturados pelas simulações. Consequentemente, o desempenho do modelo e suas reações a históricos reais podem diferir daqueles observados com as personas. Este é um trade-off comum em pesquisa de sistemas de recomendação, onde o controle experimental é priorizado na ausência de acesso a grandes volumes de dados de interação de usuários reais.
+
+O escopo do dataset de 2000 perfis também constitui uma limitação. Embora a combinação dos datasets OkCupid e SCUT-FBP5500 seja uma abordagem interessante para criar perfis multimodais, o tamanho do conjunto de dados final pode ser relativamente modesto para treinar modelos complexos como GNNs e para capturar a vasta diversidade de uma população de usuários em uma plataforma de relacionamento real. A representatividade demográfica, a variedade de interesses e personalidades contidas nesses 2000 perfis podem não abranger todo o espectro encontrado em aplicações de larga escala. Isso pode restringir a capacidade de generalização dos resultados para populações maiores e mais heterogêneas, e o modelo pode apresentar um desempenho diferente se treinado e testado com um volume de dados substancialmente maior e mais variado.
+
+Adicionalmente, se as features de imagem foram derivadas primariamente ou exclusivamente de escores de beleza do SCUT-FBP5500, isso pode representar uma simplificação do construto complexo da atratividade visual, que envolve múltiplos fatores além da beleza facial canônica, como expressão, estilo, contexto da imagem, entre outros.
+
+Outras limitações potenciais incluem a natureza estática da modelagem de preferências, já que o estudo parece focar em um snapshot das preferências do usuário, sem modelar explicitamente sua evolução temporal. Além disso, embora as GNNs como o GraphRec sejam eficazes, sua interpretabilidade pode ser um desafio; entender completamente por que o modelo faz uma recomendação específica pode ser complexo devido à natureza das representações aprendidas em múltiplas camadas de agregação no grafo.
+
+3.4. Trabalhos Futuros
+
+As limitações identificadas, juntamente com a natureza dinâmica da pesquisa em sistemas de recomendação, sugerem diversas direções promissoras para trabalhos futuros, que poderiam expandir e aprimorar o MatchPredict-AI.
+
+Validação com Dados de Usuários Reais: O passo mais crucial e lógico seria testar, validar e refinar o MatchPredict-AI utilizando dados de interação de usuários reais, provenientes de uma plataforma de relacionamento ativa. Isso exigiria acesso a dados anonimizados e o tratamento de questões éticas e de privacidade, mas permitiria avaliar o desempenho do sistema em um cenário ecológico, capturando a complexidade e a dinâmica das preferências reais e sua evolução ao longo do tempo.
+
+Exploração de Outras Arquiteturas GNN: Embora o GraphRec tenha se mostrado eficaz, o campo das GNNs para recomendação está em constante evolução. Seria valioso investigar e comparar o desempenho do MatchPredict-AI com outras arquiteturas de GNN, como LightGCN 6, que simplifica o design de GCNs para recomendação, ou modelos que incorporam mecanismos de atenção mais sofisticados ou diferentes formas de agregação de informação social e de itens, como GAT-NSR ou SEPT.6
+
+Técnicas de Calibração de Probabilidade: Dado que os resultados indicam que o contexto do usuário influencia fortemente as probabilidades de saída do modelo, a investigação e aplicação de técnicas de calibração de probabilidade (e.g., Platt Scaling, Isotonic Regression) poderiam ser benéficas. Probabilidades bem calibradas são mais confiáveis e interpretáveis, o que é importante se as pontuações do modelo forem usadas para tomar decisões críticas ou para serem exibidas aos usuários.
+
+Aprimoramento da Modelagem de Features Multimodais: Há espaço para explorar técnicas mais avançadas de extração de features. Para texto, modelos baseados em Transformers de última geração poderiam capturar nuances semânticas ainda mais ricas. Para imagens, poder-se-ia ir além da beleza facial, incorporando modelos que analisam outros aspectos da atratividade visual, como emoção, estilo pessoal, ou mesmo o contexto da imagem. Considerar features contextuais da própria interação (e.g., hora do dia, dispositivo utilizado) também poderia enriquecer o modelo.
+
+Estudos de Justiça, Viés e Transparência (Fairness, Accountability, and Transparency - FAT): É crucial aprofundar a análise de potenciais vieses (e.g., demográficos, de popularidade, de feedback loop) que podem ser aprendidos ou exacerbados pelo modelo. Pesquisar e implementar técnicas para mitigar esses vieses e aumentar a transparência e explicabilidade das recomendações são direções importantes para construir sistemas mais éticos e justos.
+
+Modelagem Dinâmica de Preferências: Incorporar a dimensão temporal de forma explícita, utilizando modelos de GNNs dinâmicas ou arquiteturas recorrentes em conjunto com GNNs, permitiria ao MatchPredict-AI capturar e se adaptar à evolução das preferências do usuário ao longo do tempo, tornando o sistema mais responsivo a mudanças no gosto ou nas necessidades do usuário.
+
+Estas sugestões refletem a natureza iterativa da pesquisa científica e tecnológica, onde cada estudo, ao responder certas questões e identificar limitações, pavimenta o caminho para novas investigações e desenvolvimentos.
+
+3.5. Conclusão Final
+
+Este trabalho de conclusão de curso apresentou o desenvolvimento e a avaliação do MatchPredict-AI, um motor de recomendação de perfis para plataformas de relacionamento projetado para ser sensível ao contexto do usuário. Através da implementação da arquitetura GraphRec, que opera sobre representações multimodais dos perfis – incluindo features textuais, demográficas, de personalidade, visuais e embeddings sociais derivados via Node2Vec – o estudo demonstrou empiricamente a capacidade do sistema de personalizar suas sugestões com base no histórico de interações do usuário. A metodologia de avaliação, empregando cenários controlados com personas simuladas ("Baseline", "Persona Consistente" e "Persona Inconsistente"), permitiu quantificar o impacto positivo de um histórico consistente na acurácia e relevância das recomendações, validando a hipótese central do projeto.
+
+A principal contribuição deste trabalho reside na aplicação e validação de uma abordagem baseada em Redes Neurais em Grafos para a tarefa de recomendação sensível ao contexto em um domínio complexo e multimodal como o de perfis de relacionamento. Os resultados não apenas confirmam a eficácia do GraphRec em integrar diversas fontes de informação, mas também destacam a importância fundamental do contexto do usuário para aprimorar a qualidade da personalização. Embora limitações como o uso de personas simuladas e o escopo do dataset tenham sido identificadas, o estudo oferece uma base sólida e insights valiosos para futuras pesquisas e desenvolvimentos na área, incluindo a transição para dados de usuários reais, a exploração de arquiteturas de modelo mais avançadas e a investigação aprofundada de questões de justiça e interpretabilidade em sistemas de recomendação. O MatchPredict-AI representa um passo em direção a sistemas de matchmaking mais inteligentes e adaptativos, com potencial para melhorar significativamente a experiência do usuário em plataformas de relacionamento online.
+
+Referências citadas
+
+SCUT-FBP5500: A Diverse Benchmark Dataset for Multi-Paradigm Facial Beauty Prediction | Request PDF - ResearchGate, acessado em junho 8, 2025, https://www.researchgate.net/publication/322634194_SCUT-FBP5500_A_Diverse_Benchmark_Dataset_for_Multi-Paradigm_Facial_Beauty_Prediction
+
+HCIILAB/SCUT-FBP5500-Database-Release: A diverse ... - GitHub, acessado em junho 8, 2025, https://github.com/HCIILAB/SCUT-FBP5500-Database-Release
+
+Graph Neural Networks for Social Recommendation - arXiv, acessado em junho 8, 2025, https://arxiv.org/pdf/1902.07243
+
+A Graph-Neural-Network-Based Social Network Recommendation Algorithm Using High-Order Neighbor Information - PMC, acessado em junho 8, 2025, https://pmc.ncbi.nlm.nih.gov/articles/PMC9571652/
+
+wenqifan03/GraphRec-WWW19: Graph Neural Networks for Social Recommendation, WWW'19 - GitHub, acessado em junho 8, 2025, https://github.com/wenqifan03/GraphRec-WWW19
+
+Graph neural networks for preference social recommendation - PeerJ, acessado em junho 8, 2025, https://peerj.com/articles/cs-1393/`

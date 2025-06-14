@@ -1,0 +1,24 @@
+% tex/discussao/dis_04_trabalhos_futuros.tex
+\section{Trabalhos Futuros}
+\label{sec:discussao_trabalhos_futuros}
+
+\textbf{Direções para Pesquisas Futuras:} \\
+As limitações identificadas, juntamente com a natureza dinâmica da pesquisa em sistemas de recomendação, sugerem diversas direções promissoras para trabalhos futuros, que poderiam expandir e aprimorar o MatchPredict-AI.
+
+\begin{itemize}
+    \item \textbf{Validação com Dados de Usuários Reais:}
+    \\ O passo mais crucial e lógico seria testar e refinar o MatchPredict-AI utilizando dados de interação de usuários reais, provenientes de uma plataforma de relacionamento ativa. Isso permitiria avaliar o desempenho do sistema em um cenário ecológico, capturando a complexidade e a dinâmica das preferências reais e sua evolução ao longo do tempo. Esta validação em um ambiente real é essencial para comprovar a viabilidade comercial e prática da abordagem proposta.
+
+    \item \textbf{Exploração de Outras Arquiteturas GNN:}
+    \\ Embora o GraphRec tenha se mostrado eficaz, o campo das GNNs para recomendação está em constante evolução. Seria valioso investigar e comparar o desempenho do MatchPredict-AI com outras arquiteturas, como \textbf{LightGCN}, que simplifica o design de GCNs para recomendação, ou modelos que incorporam mecanismos de atenção mais sofisticados, como o \textbf{Graph Attention Network (GAT)}, para ponderar a importância das conexões sociais de forma mais apurada.
+
+    \item \textbf{Estudos de Justiça, Viés e Transparência (Fairness \& Bias):}
+    \\ Dado que sistemas de recomendação podem aprender e até amplificar vieses presentes nos dados, uma linha de pesquisa fundamental seria aprofundar a análise de potenciais vieses (demográficos, de popularidade, de feedback loop) no MatchPredict-AI. Pesquisar e implementar técnicas para mitigar esses vieses e aumentar a transparência e explicabilidade das recomendações são direções importantes para construir sistemas mais éticos e justos.
+
+    \item \textbf{Aprimoramento da Modelagem Multimodal:}
+    \\ Há espaço para explorar técnicas mais avançadas de extração de features. Para texto, modelos baseados em Transformers de última geração poderiam capturar nuances semânticas ainda mais ricas. Para imagens, poder-se-ia ir além da extração de features genéricas, incorporando modelos que analisam outros aspectos da atratividade visual, como emoção, estilo pessoal ou o contexto da imagem.
+    
+    \item \textbf{Modelagem Dinâmica de Preferências:}
+    \\ Para superar a limitação do "snapshot" estático das preferências, poderiam ser exploradas arquiteturas que incorporem a dimensão temporal de forma explícita. O uso de modelos de GNNs dinâmicas ou a combinação de GNNs com Redes Neurais Recorrentes (RNNs) permitiria ao MatchPredict-AI capturar e se adaptar à evolução das preferências do usuário ao longo do tempo, tornando o sistema mais responsivo.
+\end{itemize}
+Estas sugestões refletem a natureza iterativa da pesquisa científica, onde cada estudo, ao responder certas questões e identificar limitações, pavimenta o caminho para novas investigações e desenvolvimentos.

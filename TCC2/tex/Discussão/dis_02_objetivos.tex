@@ -1,0 +1,11 @@
+% tex/discussao/dis_02_objetivos.tex
+\section{Conexão com os Objetivos do Projeto}
+\label{sec:discussao_objetivos}
+
+\textbf{Avaliação do Objetivo Principal:} \\
+O objetivo primordial do projeto MatchPredict-AI, conforme estabelecido na introdução deste trabalho e no TCC1 que o precedeu, era desenvolver e avaliar um motor de recomendação de perfis que fosse explicitamente **sensível ao contexto do usuário**. Este contexto, em nossa formulação, é primordialmente definido pelo histórico de interações do usuário (seus "likes" e "dislikes") com outros perfis na plataforma. O intuito era superar modelos mais simples que se baseiam apenas em similaridade de conteúdo, incorporando uma camada de personalização dinâmica.
+
+\textbf{Validação Empírica:} \\
+Com base nos resultados apresentados no Capítulo \ref{chap:resultados}, pode-se afirmar com confiança que o projeto atingiu seu objetivo principal. A evidência mais contundente reside na comparação de desempenho entre o cenário \textit{Baseline} (sem contexto) e os cenários de \textit{Persona} (com contexto). A mudança drástica no comportamento do modelo, especialmente nas métricas de Precisão e Recall e na calibração das probabilidades de saída (Tabela \ref{tab:probabilidades_tcc2}), demonstra inequivocamente que o modelo GraphRec implementado é capaz de utilizar o histórico de interações do usuário para refinar e personalizar suas recomendações.
+
+A arquitetura do `UserModel` dentro do GraphRec, que utiliza um mecanismo de atenção para ponderar e agregar as informações do histórico, provou ser o mecanismo chave que habilita essa sensibilidade ao contexto. O projeto, portanto, não apenas propôs um sistema sensível ao contexto, mas também validou quantitativamente essa capacidade através de um desenho experimental controlado, isolando e medindo o impacto do histórico de forma clara e interpretável.

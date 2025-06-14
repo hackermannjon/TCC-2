@@ -1,0 +1,34 @@
+% tex/Desenvolvimento/dev_04_desenho_experimental.tex
+\section{Desenho Experimental e Protocolo de Avaliação}
+\label{sec:dev_desenho_experimental}
+
+\textbf{Explicação Detalhada:} \\
+A avaliação do MatchPredict-AI foi conduzida através de um desenho experimental comparativo, cujo objetivo principal era não apenas medir o desempenho geral do sistema, mas, crucialmente, analisar e quantificar o impacto do contexto do usuário — representado pelo seu histórico de interações — na qualidade das recomendações. Para isolar e investigar este efeito de forma controlada, e devido à ausência de históricos de usuários reais no dataset, foram criadas **personas simuladas**. Esta abordagem permite testar o comportamento do `UserModel` em cenários ideais e de estresse, fornecendo insights valiosos sobre sua robustez e sensibilidade. O protocolo de avaliação foi implementado nos scripts `src/scripts/create_personas.py` e `src/scripts/evaluate_comparison.py`.
+
+\textbf{Justificativa da Abordagem:} \\
+A justificativa para esta metodologia baseada em cenários reside na sua capacidade de isolar e medir o efeito do contexto do usuário, uma característica central da proposta de valor do MatchPredict-AI. A comparação direta do desempenho entre os três cenários permite não apenas verificar se o modelo utiliza o histórico, mas também como a qualidade e a natureza desse histórico influenciam a sua eficácia. A validade das conclusões derivadas desta avaliação depende da plausibilidade das personas construídas, que foi validada visualmente no capítulo de resultados (Figura \ref{fig:tsne_personas_tcc2}).
+
+\textbf{Cenários de Teste:}
+\begin{itemize}
+    \item \textbf{Cenário 1: Baseline (Sem Histórico):}
+    \\ \textbf{Descrição:} Neste cenário, o modelo opera sem qualquer informação sobre o histórico de interações do usuário. Para cada predição, o `UserModel` recebe um input neutro (representando uma opinião de 0.5), forçando o sistema a basear sua recomendação unicamente nas features intrínsecas do perfil-alvo e no seu contexto social.
+    \\ \textbf{Propósito:} Este cenário serve como um ponto de referência fundamental. Ele estabelece o desempenho do modelo em uma situação de "cold start" (partida a frio), comum para novos usuários em uma plataforma, e permite quantificar o ganho de desempenho que é especificamente atribuível à introdução do contexto do usuário nos cenários subsequentes.
+
+    \item \textbf{Cenário 2: Persona Consistente:}
+    \\ \textbf{Descrição:} Este cenário simula um usuário com um histórico de interações coeso e consistente. O `UserModel` é alimentado com um histórico de 20 perfis que são muito similares entre si (selecionados com base na alta similaridade de cosseno com um perfil "âncora").
+    \\ \textbf{Propósito:} O objetivo aqui é avaliar a capacidade do `UserModel` de aprender e se adaptar a um padrão de preferência bem definido. Espera-se que, ao processar um histórico consistente, o modelo consiga refinar significativamente suas recomendações para perfis que se alinham com a persona.
+
+    \item \textbf{Cenário 3: Persona Inconsistente:}
+    \\ \textbf{Descrição:} Em contraste, a "Persona Inconsistente" simula um usuário cujo histórico de interações é ambíguo e ruidoso. O `UserModel` é alimentado com um histórico de 20 perfis selecionados de forma aleatória e distinta do dataset.
+    \\ \textbf{Propósito:} Este cenário visa testar a robustez do modelo frente a dados de entrada sem um padrão discernível. A análise do desempenho busca entender como o `UserModel` lida com sinais contextuais contraditórios, o que é um teste de estresse importante para avaliar a confiabilidade do modelo em situações realistas.
+\end{itemize}
+
+\textbf{Métricas de Avaliação:} \\
+Para avaliar e comparar o desempenho do MatchPredict-AI nos diferentes cenários, foi utilizado um conjunto padrão de métricas para tarefas de classificação binária:
+\begin{itemize}
+    \item \textbf{AUC (Area Under the Curve):} Mede a capacidade do modelo de discriminar corretamente entre classes positivas (like) e negativas (dislike), independentemente de um limiar de classificação. É uma excelente medida do poder de ranqueamento do modelo.
+    \item \textbf{Acurácia:} Mede a proporção de predições corretas no geral.
+    \item \textbf{Precisão:} Avalia, de todas as vezes que o modelo previu "like", quantas estavam corretas. É a métrica da "qualidade" das recomendações positivas.
+    \item \textbf{Recall (Sensibilidade):} Mede, de todos os "likes" que realmente existiam, quantos o modelo conseguiu encontrar. É a métrica da "abrangência" das recomendações.
+    \item \textbf{F1-Score:} A média harmônica entre Precisão e Recall, fornecendo uma métrica única que equilibra ambas.
+\end{itemize}
