@@ -1,0 +1,87 @@
+% Conteúdo para o novo e detalhado capítulo de Desenvolvimento
+\chapter{Desenvolvimento e Metodologia Experimental}
+\label{chap:desenvolvimento}
+
+Este capítulo apresenta a fundação técnica e o rigor metodológico empregados no desenvolvimento do sistema MatchPredict-AI. O texto a seguir detalha a seleção e combinação das fontes de dados para a criação de um dataset multimodal; o pipeline de engenharia de features responsável por transformar dados brutos em representações numéricas de alta dimensionalidade; a arquitetura do modelo de recomendação baseado em Redes Neurais em Grafos (GNNs); e, por fim, o desenho experimental comparativo concebido para validar a hipótese central do trabalho: a sensibilidade do sistema ao contexto do usuário.
+
+\section{Fontes de Dados e Construção do Dataset}
+\label{sec:fontes_dados}
+
+\textbf{Definição e Estratégia:} \\
+A construção de um sistema de recomendação robusto e eficaz depende fundamentalmente da qualidade e da diversidade dos dados. Para este estudo, a estratégia adotada foi a fusão de dois conjuntos de dados públicos distintos, com o objetivo de criar um dataset final de 2000 perfis que fosse multimodal, abrangendo características textuais, demográficas e visuais, essenciais para a predição de compatibilidade.
+
+\textbf{Dataset de Conteúdo Textual e Demográfico: OkCupid} \\
+A base principal do nosso dataset é uma versão pública de perfis da plataforma de relacionamentos online OkCupid. Este conjunto de dados é amplamente reconhecido na comunidade de pesquisa por sua riqueza em informações auto-descritivas, fornecidas pelos usuários no formato de ensaios textuais. Para este trabalho, foi utilizado o campo `essay0`, que corresponde à biografia principal do usuário. Além do conteúdo textual, o dataset OkCupid fornece dados demográficos valiosos como idade e sexo, que foram diretamente incorporados em nosso modelo. A natureza inerentemente multimodal do OkCupid o torna uma fonte ideal para a extração de um conjunto abrangente de features descritivas.
+
+\textbf{Dataset de Conteúdo Visual: SCUT-FBP5500} \\
+Para o componente visual, essencial em um contexto de relacionamento, foi incorporado o dataset SCUT-FBP5500 (Facial Beauty Prediction) \textcolor{blue}{[\cite{wang2018scut}]}. Trata-se de um benchmark acadêmico composto por 5500 imagens faciais frontais, com diversidade de gênero e etnia (asiáticos e caucasianos). A utilização deste dataset especializado como fonte para as imagens dos perfis partiu da premissa de que a atratividade física, ainda que subjetiva, desempenha um papel significativo na formação de interesse inicial.
+
+\textbf{Processo de Curadoria e Fusão:} \\
+A criação do conjunto de dados final de 2000 perfis envolveu um processo criterioso de mapeamento e seleção. Perfis do dataset OkCupid foram pareados com imagens do SCUT-FBP5500 com base em um sistema de indexação comum. O critério de seleção final exigia que um perfil possuísse simultaneamente um ensaio textual não nulo e uma imagem correspondente válida. Este processo de combinação estratégica reflete a hipótese subjacente de que a compatibilidade e a atração são fenômenos multifacetados, influenciados por uma interação complexa entre o que o usuário escreve sobre si e sua aparência visual.
+
+\section{Pipeline de Engenharia de Features}
+\label{sec:pipeline_features}
+
+\textbf{Definição:} \\
+A transformação dos dados brutos multimodais em um formato numérico denso e informativo é a etapa mais crítica do pré-processamento. O objetivo deste pipeline foi a criação de um vetor de características de alta dimensionalidade -- especificamente **2503 dimensões** -- para cada um dos 2000 perfis. Este vetor visa capturar a semântica rica contida nos dados originais.
+
+\subsection{Extração de Features Multimodais (2439 dimensões)}
+\textbf{Implementação (`src/models/features.py`):} \\
+Esta é a fase de extração primária, onde cada modalidade de dado é convertida em uma representação vetorial:
+\begin{itemize}
+    \item \textbf{Features de Imagem (2048-d):} As características visuais foram extraídas utilizando uma Rede Neural Convolucional (CNN) \textbf{ResNet50}, pré-treinada no dataset ImageNet. Especificamente, utilizou-se o vetor de ativação da penúltima camada (antes da camada de classificação final). Este vetor de 2048 dimensões representa um embedding rico das características visuais da imagem do perfil.
+    \item \textbf{Features de Texto (384-d):} Para processar os ensaios auto-descritivos, foi utilizado o modelo \textbf{Sentence-BERT} (`all-MiniLM-L6-v2`). Esta arquitetura baseada em Transformers gera um embedding de 384 dimensões que captura o significado semântico do texto, sendo superior a métodos tradicionais como Bag-of-Words por entender o contexto das palavras.
+    \item \textbf{Features Demográficas (2-d):} A idade foi normalizada para o intervalo [0, 1] para evitar problemas de escala com as outras features. O sexo foi codificado numericamente.
+    \item \textbf{Features de Personalidade (5-d):} Para extrair traços de personalidade, foi implementado um método baseado em léxico (`src/models/personality.py`). O texto da biografia de cada usuário foi analisado em busca de palavras-chave associadas aos cinco grandes traços de personalidade ("Big Five": Abertura, Conscienciosidade, Extroversão, Amabilidade, Neuroticismo). A frequência normalizada dessas palavras gera um vetor de 5 dimensões que serve como uma aproximação do perfil psicológico do usuário.
+\end{itemize}
+
+\subsection{Geração de Embeddings Sociais (64 dimensões)}
+\textbf{Adaptação Metodológica:} \\
+A proposta original do TCC1 explorou a ideia de usar APIs de redes sociais (como Instagram) para construir um grafo social explícito. Contudo, devido a barreiras práticas, como restrições de acesso a APIs e questões de privacidade, esta abordagem foi substituída por um método de construção de um **grafo social implícito**, baseado na similaridade entre os próprios perfis. Esta adaptação não só contornou o obstáculo, como também resultou em uma metodologia robusta e autocontida, onde as "conexões sociais" são inferidas a partir da compatibilidade latente entre os usuários.
+
+\textbf{Implementação (`src/models/social_graph.py`):}
+\begin{enumerate}
+    \item \textbf{Construção do Grafo de Similaridade:} Um grafo não-direcionado foi construído onde os 2000 perfis são os nós. As arestas foram criadas conectando cada perfil aos seus **10 vizinhos mais próximos (k=10)**. A proximidade foi calculada usando a métrica de **similaridade de cosseno** sobre o vetor de features multimodais de 2439 dimensões. O resultado é um grafo onde "amigos" são perfis que se parecem muito em termos de imagem, texto, demografia e personalidade.
+    \item \textbf{Aprendizado com Node2Vec:} Sobre este grafo, foi executado o algoritmo \textbf{Node2Vec}. Este algoritmo realiza "caminhadas aleatórias" (random walks) no grafo e utiliza um modelo similar ao Word2Vec para aprender uma representação vetorial de baixa dimensionalidade (64 dimensões) para cada nó. Este vetor, ou embedding social, captura a estrutura da vizinhança do perfil, ou seja, sua "posição" no ecossistema de perfis.
+\end{enumerate}
+
+\subsection{Fusão Final do Vetor de Features}
+\textbf{Implementação (`src/models/combine_features.py`):} \\
+Na etapa final, o vetor multimodal (2439-d) e o vetor social (64-d) são concatenados. Este processo resulta no vetor de feature final de **2503 dimensões** para cada perfil, salvo no arquivo `combined_features.npy`, que servirá de input principal para o modelo de recomendação.
+
+\section{Arquitetura do Modelo: GraphRec Adaptado}
+\label{sec:arquitetura_modelo}
+
+\textbf{Definição:} \\
+O coração do MatchPredict-AI é uma implementação da arquitetura **GraphRec** \textcolor{blue}{[\cite{fan2019graphrec}]}, um framework de GNN projetado para recomendação social. A implementação está contida no arquivo `src/models/graphrec.py` e é composta por três módulos principais que interagem entre si.
+
+\textbf{Componentes do Modelo:}
+\begin{itemize}
+    \item \textbf{ItemModel:} Este módulo é responsável por aprender a representação final de um perfil-alvo, denotada como $z_j$. Ele recebe como entrada o vetor de 2503 dimensões do perfil e os vetores de seus vizinhos no grafo social. Através de um **mecanismo de atenção**, o ItemModel aprende a ponderar a importância de cada vizinho, agregando suas features para enriquecer a representação do perfil-alvo. Isso permite que o "significado" de um perfil seja influenciado pelos perfis aos quais ele é similar.
+    \item \textbf{UserModel:} Este módulo é projetado para aprender a representação do "gosto" de um usuário, denotada como $z_u$. Sua entrada é um histórico de perfis com os quais o usuário interagiu (neste trabalho, simulado através das personas). Similarmente ao ItemModel, ele utiliza um **mecanismo de atenção** para ponderar a influência de cada perfil no histórico, gerando um único vetor que sintetiza as preferências daquele usuário.
+    \item \textbf{Predictor:} Trata-se de uma rede neural do tipo Multi-Layer Perceptron (MLP). Ela recebe como entrada a concatenação dos vetores de usuário ($z_u$) e de item ($z_j$) e, através de suas camadas, aprende a relação não-linear entre o gosto de um usuário e as características de um perfil, produzindo um único valor (logit). Este logit é então passado por uma função de ativação sigmoide para gerar a probabilidade final de "like", um valor entre 0 e 1.
+\end{itemize}
+
+% Você pode adicionar uma figura da arquitetura aqui
+\begin{figure}[hbt]
+    \centering
+    \framebox[0.9\textwidth][c]{\rule{0pt}{5cm} Espaço para o diagrama da arquitetura do modelo GraphRec}
+    \caption{Diagrama da arquitetura do modelo MatchPredict-AI, mostrando a interação entre o UserModel, o ItemModel e o Predictor.}
+    \label{fig:arquitetura_modelo}
+\end{figure}
+
+\section{Desenho Experimental e Protocolo de Avaliação}
+\label{sec:desenho_experimental}
+
+\textbf{Explicação Detalhada:} \\
+Para validar a capacidade do modelo de ser sensível ao contexto, foi desenhado um protocolo de avaliação comparativa. Como não dispomos de históricos de usuários reais, foram criadas **personas simuladas** (`src/scripts/create_personas.py`) para testar o comportamento do `UserModel` em cenários controlados, com a avaliação sendo executada por `src/scripts/evaluate_comparison.py`.
+
+\textbf{Cenários de Teste:}
+\begin{itemize}
+    \item \textbf{Cenário 1: Baseline (Sem Histórico):} O modelo faz predições sem nenhum histórico de usuário. O `UserModel` recebe um input neutro (um vetor representando uma opinião de 0.5). Este cenário crucial mede o poder preditivo das features do perfil por si sós e simula a experiência de um novo usuário na plataforma.
+    \item \textbf{Cenário 2: Persona Consistente:} O `UserModel` é alimentado com um histórico simulado de 20 perfis que são muito similares entre si (selecionados com base na alta similaridade de cosseno). O objetivo é avaliar a capacidade do modelo de se adaptar a um padrão de preferência bem definido.
+    \item \textbf{Cenário 3: Persona Inconsistente:} Neste cenário, o `UserModel` recebe um histórico simulado de 20 perfis totalmente aleatórios e distintos. O objetivo é testar a robustez do modelo a um histórico ruidoso e sem padrão, simulando um usuário com gostos diversos ou imprevisíveis.
+\end{itemize}
+
+\textbf{Métricas de Avaliação:} \\
+A performance em cada cenário foi avaliada utilizando um conjunto padrão de métricas para tarefas de classificação: AUC (Área Sob a Curva ROC), Acurácia, Precisão, Recall e F1-Score. A escolha deste conjunto visa oferecer uma visão abrangente do desempenho do modelo sob diferentes ângulos.
