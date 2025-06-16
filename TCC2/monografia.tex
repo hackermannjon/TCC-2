@@ -6,13 +6,19 @@
 %  - Graduação: bacharelado|engenharia|licenciatura
 %  - Pós-graduação: [qualificacao], mestrado|doutorado, ppca|ppginf
 
-% \documentclass[engenharia]{UnB-CIC}%
 \documentclass[engenharia]{UnB-CIC}%
 \usepackage{pdfpages}% incluir PDFs, usado no apêndice
 \usepackage{natbib}
 \usepackage{url}  % Para usar URLs no BibTeX
 \usepackage{chngcntr}
 \usepackage{adjustbox}
+\usepackage{booktabs} % Para \toprule, \midrule, \bottomrule em tabelas
+
+% --- PACOTES ADICIONADOS PARA CORRIGIR OS PROBLEMAS ---
+\usepackage[brazil]{babel}     % <-- ADICIONADO: Garante a hifenização correta em português.
+\usepackage{microtype}         % <-- ADICIONADO: Resolve os erros de "Underfull \hbox" melhorando a justificação.
+\usepackage{float}             % <-- ADICIONADO: Permite usar [H] para forçar a posição de tabelas e figuras.
+% ----------------------------------------------------
 
 \counterwithout{figure}{chapter} % Remove a dependência do capítulo
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -31,7 +37,7 @@
 \titulo{MatchPredict AI: Melhorando a Compatibilidade de Relacionamentos em Aplicativos de Namoro}%
 
 \palavraschave{Inteligência Artificial, Relacionamentos Virtuais, Previsão de Sucesso de Relacionamento, trabalho de conclusão de curso}%
-\keywords{Artificial Intelligence, Virtual Relationships,Virtual Relationships, thesis}%
+\keywords{Artificial Intelligence, Graph Neural Networks, Recommender Systems, Social Psychology}%
 
 \newcommand{\unbcic}{\texttt{UnB-CIC}}%
 

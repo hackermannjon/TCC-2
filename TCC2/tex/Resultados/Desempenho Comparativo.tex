@@ -1,11 +1,11 @@
-% tex/resultados/res_01_desempenho_comparativo.tex
+
 \section{Análise de Desempenho Quantitativo}
 \label{sec:res_desempenho_quantitativo}
 
-\textbf{Apresentação das Métricas:} \\
+\subsection*{Apresentação das Métricas} % Usei subsection* para não numerar e manter o negrito
 O desempenho do modelo em cada um dos três cenários experimentais foi mensurado utilizando um conjunto padrão de métricas de classificação. Os resultados, obtidos a partir da execução sobre o conjunto de teste de 1145 interações, estão consolidados na Tabela \ref{tab:metricas_tcc2}.
 
-\begin{table}[hbt]
+\begin{table}[H] % Alterado de [hbt] para [H] para forçar a posição "aqui"
 \centering
 \caption{Métricas de Desempenho Comparativas por Cenário de Avaliação.}
 \label{tab:metricas_tcc2}
@@ -18,13 +18,12 @@ Persona: Consistente     & 0.965 & 0.514 & 0.514 & 1.000 & 0.679 \\
 Persona: Inconsistente   & 0.821 & 0.514 & 0.514 & 1.000 & 0.679 \\
 \bottomrule
 \end{tabular}
-\fonte{Produzido pelo autor.}
 \end{table}
 
-\textbf{Análise das Probabilidades de Saída:} \\
+\subsection*{Análise das Probabilidades de Saída}
 Para compreender o comportamento que leva às métricas apresentadas, é fundamental analisar as probabilidades de "like" que o modelo gera. A Tabela \ref{tab:probabilidades_tcc2} detalha a probabilidade média que o modelo atribuiu a perfis que foram de fato um "Like" e a perfis que foram um "Dislike" no conjunto de teste.
 
-\begin{table}[hbt]
+\begin{table}[H] % Alterado de [hbt] para [H] para forçar a posição "aqui"
 \centering
 \caption{Análise das Probabilidades de Saída do Modelo por Cenário.}
 \label{tab:probabilidades_tcc2}
@@ -37,10 +36,9 @@ Persona: Consistente     & 0.968 & 0.817 \\
 Persona: Inconsistente   & 0.999 & 0.999 \\
 \bottomrule
 \end{tabular}
-\fonte{Produzido pelo autor.}
 \end{table}
 
-\textbf{Interpretação Preliminar:} \\
+\subsection*{Interpretação Preliminar}
 A análise das tabelas revela três comportamentos distintos do modelo. No cenário \textbf{Baseline}, o modelo demonstra um excelente poder de discriminação (AUC de 0.970) e um forte equilíbrio entre precisão e recall, resultando em um F1-Score de 0.901.
 
 Ao ser exposto a um histórico contextual, o comportamento muda drasticamente. Com a \textbf{Persona Consistente}, o modelo se torna extremamente otimista, classificando quase todas as instâncias como "like". Isso maximiza o Recall para 1.0, mas degrada a Precisão e a Acurácia para aproximadamente 51\%. A Tabela \ref{tab:probabilidades_tcc2} elucida este efeito, mostrando que a probabilidade média para dislikes reais sobe de 0.052 para 0.817, ultrapassando o limiar de decisão de 0.5.
